@@ -1,0 +1,107 @@
+# ============================================================
+# 可复用工作流 (Reusable Workflow)
+# 仓库：2029193370/ci-templates
+# 路径：.github/workflows/reusable-ci.yml
+#
+# 其他项目通过以下方式调用此工作流：
+#   uses: 2029193370/ci-templates/.github/workflows/reusable-ci.yml@main
+# ============================================================
+
+name: Reusable CI & Security
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: 'Node.js 版本'
+        required: false
+        type: string
+        default: '22'
+      php-version:
+        description: 'PHP 版本'
+        required: false
+        type: string
+        default: '8.2'
+      python-version:
+        description: 'Python 版本'
+        required: false
+        type: string
+        default: '3.11'
+      trivy-severity:
+        description: 'Trivy 扫描严重程度阈值'
+        required: false
+        type: string
+        default: 'CRITICAL,HIGH'
+
+jobs:
+  # ==========================================
+  # Layer 1: 语法与代码规范检查 (Linting)
+  # ==========================================
+  lint-and-format:
+    name: Layer 1 - Syntax & Lint Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      # ── Node.js / 前端项目 ──────────────────
+      - name: Setup Node.js
+        if: hashFiles('package.json') != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+
+      - name: Run Node.js Lint (npm)
+        if: hashFiles('package.json') != ''
+        run: |
+          npm ci
+          npm run lint --if-present
+
+      # ── PHP 项目 ────────────────────────────
+      - name: Setup PHP
+        if: hashFiles('composer.json') != '' || hashFiles('**/*.php') != ''
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ inputs.php-version }}
+
+      - name: Install Composer Dependencies
+        if: hashFiles('composer.json') != ''
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Run PHP Syntax Check
+        if: hashFiles('**/*.php') != ''
+        run: find . -name "*.php" -not -path "./vendor/*" -print0 | xargs -0 -n1 php -l
+
+      # ── Python 项目 ─────────────────────────
+      - name: Setup Python
+        if: hashFiles('requirements.txt') != '' || hashFiles('Pipfile') != '' || hashFiles('pyproject.toml') != ''
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Run Python Lint (Flake8)
+        if: hashFiles('requirements.txt') != '' || hashFiles('Pipfile') != '' || hashFiles('pyproject.toml') != ''
+        run: |
+          pip install flake8
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+  # ==========================================
+  # Layer 2: 安全漏洞与密钥泄露扫描
+  # ==========================================
+  security-scan:
+    name: Layer 2 - Trivy Security & Secret Scan
+    runs-on: ubuntu-latest
+    needs: lint-and-format
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy Vulnerability Scanner
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          format: 'table'
+          severity: ${{ inputs.trivy-severity }}
+          exit-code: '1'
