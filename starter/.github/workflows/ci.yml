@@ -1,0 +1,13 @@
+name: CI & Security Scan
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  ci:
+    uses: 2029193370/ci-templates/.github/workflows/reusable-ci.yml@main
+    with:
+      node-version: '22'   # Node.js 项目修改此处版本，其他项目类型删除此行
