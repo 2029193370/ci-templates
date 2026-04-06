@@ -13,13 +13,17 @@
 | Python / Django / FastAPI | `requirements.txt` / `Pipfile` / `pyproject.toml` | Flake8 致命错误检查 |
 | Go | `go.mod` | `go vet` → `go build` |
 | .NET / C# | `*.csproj` / `*.sln` | `dotnet restore` → `dotnet build` |
+| Docker | `Dockerfile` | Hadolint 最佳实践与安全检查 |
 
 ## 流水线结构
 
 | Layer | 内容 | 说明 |
 |-------|------|------|
+| Layer 0 | 仓库卫生检查 | 编译产物、合并冲突标记、敏感文件（`.env`/私钥）、大文件检测 |
 | Layer 1 | Lint & Build 检查 | 根据项目文件自动检测语言，执行对应的语法检查和编译 |
-| Layer 2 | Trivy 安全漏洞 & 密钥泄露扫描 | Layer 1 通过后自动执行，同时扫描依赖漏洞和硬编码密钥 |
+| Layer 2 | Trivy 安全漏洞 & 密钥泄露扫描 | 同时扫描依赖漏洞和硬编码密钥 |
+
+> **执行策略**：所有 Layer 的所有检查项全量执行，不会因某项失败而跳过后续检查。开发者可在一次 CI 运行中看到全部问题，一次性修复。
 
 ---
 
@@ -65,9 +69,12 @@ jobs:
 
 ## 安全与性能特性
 
+- **全量执行不中断** — 所有检查项全部跑完再汇总报告，开发者一次看到所有问题，避免反复修复-推送
 - **最小权限原则** — 工作流仅声明 `contents: read`，限制 Token 作用范围
 - **并发控制** — 同一分支重复推送自动取消旧流水线，节省 Actions 分钟数
-- **超时保护** — 所有 Job 设置超时（Layer 1: 20min，Layer 2: 15min），防止挂起
+- **仓库卫生检查** — 拦截编译产物、合并冲突标记、大文件（>5MB），警告 `.env`/私钥等敏感文件
+- **Dockerfile 规范** — 自动检测 Dockerfile 并用 Hadolint 检查安全与最佳实践
+- **超时保护** — 所有 Job 设置超时（Layer 0: 5min，Layer 1: 20min，Layer 2: 15min），防止挂起
 - **依赖缓存** — npm / Maven / Gradle / Composer / pip / Go modules 均启用缓存
 - **显式扫描器** — Trivy 同时启用 `vuln`（漏洞）+ `secret`（密钥泄露）扫描
 
