@@ -1,13 +1,25 @@
 # ci-templates
 
-公司通用 CI/CD 工作流模板，支持 Node.js、PHP、Python 项目自动检测。
+企业通用 CI 工作流模板，自动检测项目语言并执行对应的质量检查与安全扫描。
 
-## 包含检查
+## 支持的技术栈
 
-| Layer | 内容 | 触发条件 |
-|-------|------|----------|
-| Layer 1 | 语法 & Lint 检查 | 检测到 `package.json` / `*.php` / `requirements.txt` 自动执行 |
-| Layer 2 | Trivy 安全漏洞 & 密钥泄露扫描 | Layer 1 通过后自动执行 |
+| 技术栈 | 检测文件 | 执行内容 |
+|--------|----------|----------|
+| Node.js / TypeScript / Next.js / React | `package.json` | `npm ci` → `npm run lint` → `npm run build` |
+| Java (Maven) | `pom.xml` | `mvn -B compile`（自动识别 Maven Wrapper） |
+| Java (Gradle) | `build.gradle` / `build.gradle.kts` | `gradle assemble`（自动识别 Gradle Wrapper） |
+| PHP / Laravel | `composer.json` / `*.php` | `composer install` → `php -l` 语法检查 |
+| Python / Django / FastAPI | `requirements.txt` / `Pipfile` / `pyproject.toml` | Flake8 致命错误检查 |
+| Go | `go.mod` | `go vet` → `go build` |
+| .NET / C# | `*.csproj` / `*.sln` | `dotnet restore` → `dotnet build` |
+
+## 流水线结构
+
+| Layer | 内容 | 说明 |
+|-------|------|------|
+| Layer 1 | Lint & Build 检查 | 根据项目文件自动检测语言，执行对应的语法检查和编译 |
+| Layer 2 | Trivy 安全漏洞 & 密钥泄露扫描 | Layer 1 通过后自动执行，同时扫描依赖漏洞和硬编码密钥 |
 
 ---
 
@@ -26,17 +38,22 @@
 
 ### 第 2 步：按需修改版本（可选）
 
+打开 `ci.yml`，取消注释并修改你需要的语言版本：
+
 ```yaml
 jobs:
   ci:
     uses: 2029193370/ci-templates/.github/workflows/reusable-ci.yml@main
     with:
-      node-version: '22'    # Node.js 项目：修改版本号
-      php-version: '8.2'    # PHP 项目：加上这行
-      python-version: '3.11' # Python 项目：加上这行
+      node-version: '22'       # Node.js / TypeScript / Next.js
+      java-version: '17'       # Java (Maven / Gradle)
+      php-version: '8.2'       # PHP / Laravel
+      python-version: '3.11'   # Python / Django
+      go-version: '1.22'       # Go
+      dotnet-version: '8.0'    # .NET / C#
 ```
 
-**不需要传入的参数直接删掉即可**，工作流会自动根据项目中存在的文件判断执行哪些检查。
+**不需要传入的参数保持注释或删掉即可**，工作流会自动根据项目中存在的文件判断执行哪些检查。
 
 ---
 
@@ -46,10 +63,20 @@ jobs:
 
 ---
 
-## 支持的项目类型
+## 安全与性能特性
 
-| 项目类型 | 检测文件 | 执行内容 |
-|----------|----------|----------|
-| Node.js / Next.js / React | `package.json` | `npm ci` + `npm run lint` |
-| PHP / Laravel | `composer.json` / `*.php` | `composer install` + `php -l` 语法检查 |
-| Python / Django | `requirements.txt` / `Pipfile` / `pyproject.toml` | Flake8 致命错误检查 |
+- **最小权限原则** — 工作流仅声明 `contents: read`，限制 Token 作用范围
+- **并发控制** — 同一分支重复推送自动取消旧流水线，节省 Actions 分钟数
+- **超时保护** — 所有 Job 设置超时（Layer 1: 20min，Layer 2: 15min），防止挂起
+- **依赖缓存** — npm / Maven / Gradle / Composer / pip / Go modules 均启用缓存
+- **显式扫描器** — Trivy 同时启用 `vuln`（漏洞）+ `secret`（密钥泄露）扫描
+
+---
+
+## 添加状态徽章
+
+在项目 README 顶部添加：
+
+```markdown
+![CI](https://github.com/<你的用户名>/<你的仓库>/actions/workflows/ci.yml/badge.svg)
+```
