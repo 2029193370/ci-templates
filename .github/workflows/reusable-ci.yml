@@ -114,7 +114,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: ${{ inputs.harden-runner-policy }}
 
@@ -202,7 +202,7 @@ jobs:
         node: ${{ fromJSON(inputs.node-versions != '' && inputs.node-versions || format('[{0}]', toJSON(inputs.node-version))) }}
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: ${{ inputs.harden-runner-policy }}
 
@@ -263,7 +263,7 @@ jobs:
     if: ${{ !cancelled() && (!inputs.fail-fast-on-hygiene || needs.repo-hygiene.result == 'success') }}
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: ${{ inputs.harden-runner-policy }}
 
@@ -338,7 +338,7 @@ jobs:
     if: ${{ !cancelled() && (!inputs.fail-fast-on-hygiene || needs.repo-hygiene.result == 'success') }}
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: ${{ inputs.harden-runner-policy }}
 
@@ -358,7 +358,7 @@ jobs:
 
       - name: Setup PHP
         if: steps.detect.outputs.found == 'true'
-        uses: shivammathur/setup-php@c541c155eee45413f5b09a52248675b1a2575231 # 2.31.1
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
         with:
           php-version: ${{ inputs.php-version }}
           tools: composer:v2
@@ -403,7 +403,7 @@ jobs:
         py: ${{ fromJSON(inputs.python-versions != '' && inputs.python-versions || format('[{0}]', toJSON(inputs.python-version))) }}
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: ${{ inputs.harden-runner-policy }}
 
@@ -465,7 +465,7 @@ jobs:
     if: ${{ !cancelled() && (!inputs.fail-fast-on-hygiene || needs.repo-hygiene.result == 'success') }}
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: ${{ inputs.harden-runner-policy }}
 
@@ -514,7 +514,7 @@ jobs:
     if: ${{ !cancelled() && (!inputs.fail-fast-on-hygiene || needs.repo-hygiene.result == 'success') }}
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: ${{ inputs.harden-runner-policy }}
 
@@ -565,7 +565,7 @@ jobs:
     if: ${{ !cancelled() && (!inputs.fail-fast-on-hygiene || needs.repo-hygiene.result == 'success') }}
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: ${{ inputs.harden-runner-policy }}
 
@@ -585,7 +585,7 @@ jobs:
 
       - name: Hadolint
         if: steps.detect.outputs.found == 'true'
-        uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf # v3.1.0
+        uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5 # v3.3.0
         with:
           recursive: true
           failure-threshold: warning
@@ -629,7 +629,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: ${{ inputs.harden-runner-policy }}
 
@@ -659,7 +659,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: ${{ inputs.harden-runner-policy }}
 
@@ -684,7 +684,7 @@ jobs:
 
       - name: Checkov
         if: steps.detect.outputs.found == 'true'
-        uses: bridgecrewio/checkov-action@33dbb953e9f9e28d92903b9c214f4072e6c7fd07 # v12.2969.0
+        uses: bridgecrewio/checkov-action@3203f966a7ccd680cd8f6aaa3c3c5b0b3e9afa32 # v12.3099.0
         with:
           framework: terraform,kubernetes,dockerfile,secrets,github_actions
           soft_fail: true
@@ -707,7 +707,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: ${{ inputs.harden-runner-policy }}
 
@@ -729,7 +729,7 @@ jobs:
     if: ${{ !cancelled() && needs.layer1-aggregate.result == 'success' }}
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
         with:
           egress-policy: ${{ inputs.harden-runner-policy }}
 
