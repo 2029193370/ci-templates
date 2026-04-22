@@ -228,7 +228,7 @@ jobs:
 
       - name: Setup Java
         if: steps.detect.outputs.maven == 'true' || steps.detect.outputs.gradle == 'true'
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: ${{ inputs.java-version }}
           distribution: 'temurin'
