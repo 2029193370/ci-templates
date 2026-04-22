@@ -598,16 +598,24 @@ jobs:
     if: ${{ always() }}
     steps:
       - name: Summarise
+        env:
+          NODE_R: ${{ needs.node-matrix.result }}
+          JAVA_R: ${{ needs.java-check.result }}
+          PHP_R: ${{ needs.php-check.result }}
+          PY_R: ${{ needs.python-matrix.result }}
+          GO_R: ${{ needs.go-check.result }}
+          NET_R: ${{ needs.dotnet-check.result }}
+          DOCKER_R: ${{ needs.docker-check.result }}
         run: |
           echo "=== Layer 1 Summary ==="
           failed=""
-          [ "${{ needs.node-matrix.result }}"    = "failure" ] && failed="${failed}  - Node failed\n"
-          [ "${{ needs.java-check.result }}"     = "failure" ] && failed="${failed}  - Java failed\n"
-          [ "${{ needs.php-check.result }}"      = "failure" ] && failed="${failed}  - PHP failed\n"
-          [ "${{ needs.python-matrix.result }}"  = "failure" ] && failed="${failed}  - Python failed\n"
-          [ "${{ needs.go-check.result }}"       = "failure" ] && failed="${failed}  - Go failed\n"
-          [ "${{ needs.dotnet-check.result }}"   = "failure" ] && failed="${failed}  - .NET failed\n"
-          [ "${{ needs.docker-check.result }}"   = "failure" ] && failed="${failed}  - Dockerfile failed\n"
+          [ "$NODE_R"   = "failure" ] && failed="${failed}  - Node failed\n"
+          [ "$JAVA_R"   = "failure" ] && failed="${failed}  - Java failed\n"
+          [ "$PHP_R"    = "failure" ] && failed="${failed}  - PHP failed\n"
+          [ "$PY_R"     = "failure" ] && failed="${failed}  - Python failed\n"
+          [ "$GO_R"     = "failure" ] && failed="${failed}  - Go failed\n"
+          [ "$NET_R"    = "failure" ] && failed="${failed}  - .NET failed\n"
+          [ "$DOCKER_R" = "failure" ] && failed="${failed}  - Dockerfile failed\n"
           if [ -n "$failed" ]; then
             printf "\nFailed:\n%b\n" "$failed"
             echo "::error::Layer 1 has failing checks"
