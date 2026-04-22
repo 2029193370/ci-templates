@@ -16,17 +16,23 @@ permissions:
 
 jobs:
   ci:
-    uses: 2029193370/ci-templates/.github/workflows/reusable-ci.yml@main
-    # Uncomment the inputs you need; omitted ones use sensible defaults.
-    # The reusable workflow auto-detects which language jobs to run.
+    # Pin at the sliding major tag so you receive compatible updates automatically.
+    # Pin at an exact tag (e.g. @v2.1.0) if you need fully reproducible builds.
+    uses: 2029193370/ci-templates/.github/workflows/reusable-ci.yml@v2
+    # Uncomment what you need. Every input is optional and auto-defaults.
     # with:
-    #   node-version: '22'       # Node.js / TypeScript / Next.js
-    #   java-version: '21'       # Java LTS (Maven / Gradle)
-    #   php-version: '8.3'       # PHP / Laravel
-    #   python-version: '3.12'   # Python / Django / FastAPI
-    #   go-version: '1.23'       # Go
-    #   dotnet-version: '8.0'    # .NET / C#
+    #   node-version: '22'
+    #   node-versions: '["20","22"]'   # matrix test (overrides node-version)
+    #   java-version: '21'
+    #   php-version: '8.3'
+    #   python-version: '3.12'
+    #   python-versions: '["3.11","3.12"]'
+    #   go-version: '1.23'
+    #   dotnet-version: '8.0'
     #   trivy-severity: 'CRITICAL,HIGH'
     #   trivy-exit-code: '1'
+    #   enable-checkov: true           # IaC scan (Terraform/K8s/Dockerfile)
+    #   enable-license-scan: false     # REUSE SPDX compliance scan
+    #   harden-runner-policy: 'audit'  # 'block' for strict egress
     # secrets:
     #   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

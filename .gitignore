@@ -106,3 +106,6 @@ coverage.xml
 # ===== Temp helper scripts (ignored locally, not for reuse) =====
 _normalize.py
 _check.py
+_pins.py
+_pins.json
+_commit_msg.txt

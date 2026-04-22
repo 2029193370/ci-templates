@@ -1,6 +1,6 @@
 version: 2
 updates:
-  # GitHub Actions versioning (highest priority)
+  # GitHub Actions - pin to commit SHA, keep tag as comment
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
@@ -9,12 +9,26 @@ updates:
       time: '03:00'
       timezone: 'Asia/Shanghai'
     open-pull-requests-limit: 10
-    labels: ['dependencies', 'github-actions']
+    labels: ['dependencies', 'github-actions', 'security']
+    commit-message:
+      prefix: 'chore(deps)'
+      include: 'scope'
     groups:
       actions-minor-patch:
         update-types: ['minor', 'patch']
 
-  # Node.js / TypeScript / Next.js
+  # Separate entry for starter so consumer template tracks the same SHA pins
+  - package-ecosystem: 'github-actions'
+    directory: '/starter'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+    open-pull-requests-limit: 5
+    labels: ['dependencies', 'github-actions']
+    commit-message:
+      prefix: 'chore(deps)'
+      include: 'scope'
+
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:
@@ -24,69 +38,57 @@ updates:
       timezone: 'Asia/Shanghai'
     open-pull-requests-limit: 10
     labels: ['dependencies', 'npm']
+    commit-message:
+      prefix: 'chore(deps)'
     groups:
       npm-minor-patch:
         update-types: ['minor', 'patch']
 
-  # PHP / Laravel
   - package-ecosystem: 'composer'
     directory: '/'
-    schedule:
-      interval: 'weekly'
-      day: 'monday'
+    schedule: { interval: 'weekly', day: 'monday' }
     open-pull-requests-limit: 5
     labels: ['dependencies', 'php']
+    commit-message: { prefix: 'chore(deps)' }
 
-  # Python
   - package-ecosystem: 'pip'
     directory: '/'
-    schedule:
-      interval: 'weekly'
-      day: 'monday'
+    schedule: { interval: 'weekly', day: 'monday' }
     open-pull-requests-limit: 5
     labels: ['dependencies', 'python']
+    commit-message: { prefix: 'chore(deps)' }
 
-  # Java Maven
   - package-ecosystem: 'maven'
     directory: '/'
-    schedule:
-      interval: 'weekly'
-      day: 'monday'
+    schedule: { interval: 'weekly', day: 'monday' }
     open-pull-requests-limit: 5
     labels: ['dependencies', 'java']
+    commit-message: { prefix: 'chore(deps)' }
 
-  # Java Gradle
   - package-ecosystem: 'gradle'
     directory: '/'
-    schedule:
-      interval: 'weekly'
-      day: 'monday'
+    schedule: { interval: 'weekly', day: 'monday' }
     open-pull-requests-limit: 5
     labels: ['dependencies', 'java']
+    commit-message: { prefix: 'chore(deps)' }
 
-  # Go modules
   - package-ecosystem: 'gomod'
     directory: '/'
-    schedule:
-      interval: 'weekly'
-      day: 'monday'
+    schedule: { interval: 'weekly', day: 'monday' }
     open-pull-requests-limit: 5
     labels: ['dependencies', 'go']
+    commit-message: { prefix: 'chore(deps)' }
 
-  # .NET NuGet
   - package-ecosystem: 'nuget'
     directory: '/'
-    schedule:
-      interval: 'weekly'
-      day: 'monday'
+    schedule: { interval: 'weekly', day: 'monday' }
     open-pull-requests-limit: 5
     labels: ['dependencies', 'dotnet']
+    commit-message: { prefix: 'chore(deps)' }
 
-  # Docker
   - package-ecosystem: 'docker'
     directory: '/'
-    schedule:
-      interval: 'weekly'
-      day: 'monday'
+    schedule: { interval: 'weekly', day: 'monday' }
     open-pull-requests-limit: 5
     labels: ['dependencies', 'docker']
+    commit-message: { prefix: 'chore(deps)' }
