@@ -130,7 +130,7 @@
     </a>
     <div class="hidden md:flex items-center gap-8 text-sm text-slate-300">
       <a href="#features"    class="hover:text-white transition">Features</a>
-      <a href="#quickstart"  class="hover:text-white transition">Quick Start</a>
+      <a href="#install"     class="hover:text-white transition">Install</a>
       <a href="#architecture" class="hover:text-white transition">Architecture</a>
       <a href="#security"    class="hover:text-white transition">Security</a>
       <a href="#faq"         class="hover:text-white transition">FAQ</a>
@@ -143,7 +143,7 @@
         </svg>
         GitHub
       </a>
-      <a href="#quickstart"
+      <a href="#install"
          class="text-sm font-semibold px-4 py-1.5 rounded-lg bg-gradient-to-r from-brand-500 to-purple-500 hover:from-brand-600 hover:to-purple-600 transition">
         Get started
       </a>
@@ -174,18 +174,19 @@
       </p>
 
       <div class="mt-8 flex flex-wrap gap-3">
-        <a href="#quickstart"
+        <a href="#install"
            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-brand-500 to-purple-500 hover:from-brand-600 hover:to-purple-600 font-semibold glow transition">
-          Quick Start
+          Install in 30s
           <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 3.293a1 1 0 00-1.414 1.414L13.586 9H3a1 1 0 100 2h10.586l-4.293 4.293a1 1 0 001.414 1.414l6-6a1 1 0 000-1.414l-6-6z"/></svg>
+        </a>
+        <a href="https://github.com/2029193370/ci-templates/generate"
+           class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-emerald-400/40 hover:border-emerald-400 bg-emerald-400/10 hover:bg-emerald-400/15 font-semibold transition">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1a.75.75 0 01.75.75V4h2.25a.75.75 0 010 1.5H8.75v2.25a.75.75 0 01-1.5 0V5.5H5a.75.75 0 010-1.5h2.25V1.75A.75.75 0 018 1zM2 8.75A.75.75 0 012.75 8h10.5a.75.75 0 010 1.5H2.75A.75.75 0 012 8.75zM2 12.75a.75.75 0 01.75-.75h10.5a.75.75 0 010 1.5H2.75A.75.75 0 012 12.75z"/></svg>
+          Use this template
         </a>
         <a href="https://github.com/2029193370/ci-templates"
            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-white/10 hover:border-white/30 bg-white/5 font-semibold transition">
           View on GitHub
-        </a>
-        <a href="https://github.com/2029193370/ci-templates/blob/main/README.zh-CN.md"
-           class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-white/10 hover:border-white/30 bg-white/5 font-semibold transition">
-          简体中文
         </a>
       </div>
 
@@ -358,50 +359,109 @@
   </div>
 </section>
 
-<!-- ===== Quick Start ===== -->
-<section id="quickstart" class="max-w-7xl mx-auto px-6 py-24 border-t border-white/5">
+<!-- ===== Install ===== -->
+<section id="install" class="max-w-7xl mx-auto px-6 py-24 border-t border-white/5">
   <div class="text-center mb-14">
-    <span class="text-xs font-semibold uppercase tracking-wider text-brand-500">Get going</span>
-    <h2 class="mt-3 text-3xl md:text-4xl font-extrabold">Quick Start</h2>
-    <p class="mt-4 text-slate-400">Drop in one file, push, enjoy a 30-minute reduction per repository per year.</p>
+    <span class="text-xs font-semibold uppercase tracking-wider text-brand-500">30-second setup</span>
+    <h2 class="mt-3 text-3xl md:text-4xl font-extrabold">Install in seconds</h2>
+    <p class="mt-4 text-slate-400">Three drop-in options — pick whichever style fits your team.</p>
   </div>
 
-  <div class="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+  <div class="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
 
-    <div class="card rounded-2xl p-6">
-      <div class="text-4xl font-black text-brand-500/50">01</div>
-      <h3 class="mt-2 font-bold text-lg">Copy the starter</h3>
-      <p class="mt-2 text-sm text-slate-400 leading-relaxed">
-        Place <code class="kbd">starter/.github/workflows/ci.yml</code> into your repository at the same path.
+    <!-- A. one-line installer -->
+    <div class="card rounded-2xl p-6 md:col-span-2 flex flex-col">
+      <div class="flex items-center gap-3 mb-3">
+        <span class="px-2 py-0.5 rounded text-xs font-bold bg-brand-500/20 text-brand-50 border border-brand-500/30">RECOMMENDED</span>
+        <h3 class="font-bold text-lg">A. One-line installer</h3>
+      </div>
+      <p class="text-sm text-slate-400 mb-4">
+        Run from the root of your project. The script checks git state, creates <code class="kbd">.github/workflows/ci.yml</code>, and prints the commit recipe.
+      </p>
+
+      <div class="mt-auto space-y-3">
+        <div>
+          <div class="text-xs text-slate-500 mb-1">macOS / Linux / WSL / Git Bash</div>
+          <div class="relative group">
+<pre class="bg-black/40 border border-white/10 rounded-lg p-3 text-xs overflow-x-auto"><code>curl -fsSL https://raw.githubusercontent.com/2029193370/ci-templates/main/scripts/install.sh | bash</code></pre>
+            <button data-copy-target="sh" class="copy-btn absolute top-2 right-2 text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition opacity-0 group-hover:opacity-100">Copy</button>
+          </div>
+        </div>
+        <div>
+          <div class="text-xs text-slate-500 mb-1">Windows PowerShell</div>
+          <div class="relative group">
+<pre class="bg-black/40 border border-white/10 rounded-lg p-3 text-xs overflow-x-auto"><code>iwr -useb https://raw.githubusercontent.com/2029193370/ci-templates/main/scripts/install.ps1 | iex</code></pre>
+            <button data-copy-target="ps" class="copy-btn absolute top-2 right-2 text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition opacity-0 group-hover:opacity-100">Copy</button>
+          </div>
+        </div>
+      </div>
+
+      <p class="mt-4 text-xs text-slate-500">
+        Security conscious? Read the script before piping:
+        <a class="text-brand-50 hover:underline" href="https://github.com/2029193370/ci-templates/blob/main/scripts/install.sh">install.sh</a> ·
+        <a class="text-brand-50 hover:underline" href="https://github.com/2029193370/ci-templates/blob/main/scripts/install.ps1">install.ps1</a>
       </p>
     </div>
 
-    <div class="card rounded-2xl p-6">
-      <div class="text-4xl font-black text-brand-500/50">02</div>
-      <h3 class="mt-2 font-bold text-lg">Push to main</h3>
-      <p class="mt-2 text-sm text-slate-400 leading-relaxed">
-        Every push / PR now runs the three-layer pipeline. Jobs for languages you don't use exit in seconds.
+    <!-- B. template button -->
+    <div class="card rounded-2xl p-6 flex flex-col">
+      <div class="flex items-center gap-3 mb-3">
+        <span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">NEW PROJECT</span>
+        <h3 class="font-bold text-lg">B. Use template</h3>
+      </div>
+      <p class="text-sm text-slate-400 mb-auto">
+        Click below to generate a fresh repository pre-populated with the starter structure — ideal when kicking off a brand-new project.
       </p>
+      <a href="https://github.com/2029193370/ci-templates/generate"
+         class="mt-4 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-bold transition">
+        Use this template
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 3.293a1 1 0 00-1.414 1.414L13.586 9H3a1 1 0 100 2h10.586l-4.293 4.293a1 1 0 001.414 1.414l6-6a1 1 0 000-1.414l-6-6z"/></svg>
+      </a>
     </div>
 
-    <div class="card rounded-2xl p-6">
-      <div class="text-4xl font-black text-brand-500/50">03</div>
-      <h3 class="mt-2 font-bold text-lg">Stay updated automatically</h3>
-      <p class="mt-2 text-sm text-slate-400 leading-relaxed">
-        Pin <code class="kbd">@v2</code>. Each release we publish is picked up on your next CI run. Zero PRs, zero emails.
+    <!-- C. manual copy -->
+    <div class="card rounded-2xl p-6 md:col-span-3">
+      <div class="flex items-center gap-3 mb-3">
+        <span class="px-2 py-0.5 rounded text-xs font-bold bg-white/10 border border-white/10">MANUAL</span>
+        <h3 class="font-bold text-lg">C. Copy &amp; paste — 8 lines</h3>
+      </div>
+      <p class="text-sm text-slate-400 mb-3">
+        Create <code class="kbd">.github/workflows/ci.yml</code> in your repository with the following contents:
       </p>
+      <div class="relative group">
+<pre class="bg-black/40 border border-white/10 rounded-lg p-4 text-sm overflow-x-auto"><code><span class="text-slate-500">name:</span> <span class="text-amber-300">CI &amp; Security Scan</span>
+<span class="text-slate-500">on:</span> { <span class="text-slate-500">push:</span> { <span class="text-slate-500">branches:</span> [<span class="text-emerald-300">main</span>] }, <span class="text-slate-500">pull_request:</span> { <span class="text-slate-500">branches:</span> [<span class="text-emerald-300">main</span>] } }
+<span class="text-slate-500">permissions:</span> { <span class="text-slate-500">contents:</span> <span class="text-emerald-300">read</span> }
+<span class="text-slate-500">jobs:</span>
+  <span class="text-slate-500">ci:</span>
+    <span class="text-indigo-300">uses:</span> <span class="text-amber-200">2029193370/ci-templates/.github/workflows/reusable-ci.yml@v2</span></code></pre>
+        <button data-copy-target="yaml" class="copy-btn absolute top-2 right-2 text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition opacity-0 group-hover:opacity-100">Copy</button>
+      </div>
     </div>
 
-  </div>
-
-  <div class="mt-10 text-center">
-    <a href="https://github.com/2029193370/ci-templates/blob/main/starter/.github/workflows/ci.yml"
-       class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-brand-500 to-purple-500 hover:from-brand-600 hover:to-purple-600 font-semibold glow transition">
-      View starter file
-      <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 3.293a1 1 0 00-1.414 1.414L13.586 9H3a1 1 0 100 2h10.586l-4.293 4.293a1 1 0 001.414 1.414l6-6a1 1 0 000-1.414l-6-6z"/></svg>
-    </a>
   </div>
 </section>
+
+<script>
+  // Hidden payloads for copy buttons (keeps HTML readable above)
+  const CI_TEMPLATES_PAYLOADS = {
+    sh:   'curl -fsSL https://raw.githubusercontent.com/2029193370/ci-templates/main/scripts/install.sh | bash',
+    ps:   'iwr -useb https://raw.githubusercontent.com/2029193370/ci-templates/main/scripts/install.ps1 | iex',
+    yaml: 'name: CI & Security Scan\non: { push: { branches: [main] }, pull_request: { branches: [main] } }\npermissions: { contents: read }\njobs:\n  ci:\n    uses: 2029193370/ci-templates/.github/workflows/reusable-ci.yml@v2\n',
+  };
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const key = btn.dataset.copyTarget;
+      try {
+        await navigator.clipboard.writeText(CI_TEMPLATES_PAYLOADS[key]);
+        const prev = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.classList.add('bg-emerald-500/30');
+        setTimeout(() => { btn.textContent = prev; btn.classList.remove('bg-emerald-500/30'); }, 1400);
+      } catch (e) { btn.textContent = 'Failed'; }
+    });
+  });
+</script>
 
 <!-- ===== Security ===== -->
 <section id="security" class="max-w-7xl mx-auto px-6 py-24 border-t border-white/5">

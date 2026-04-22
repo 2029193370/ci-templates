@@ -19,9 +19,73 @@
 
 [English](./README.md) &nbsp;|&nbsp; **简体中文**
 
-[快速开始](#快速开始) &nbsp;·&nbsp; [特性](#特性) &nbsp;·&nbsp; [配置](#配置) &nbsp;·&nbsp; [安全模型](#安全模型) &nbsp;·&nbsp; [常见问题](#常见问题) &nbsp;·&nbsp; [贡献指南](./CONTRIBUTING.md) &nbsp;·&nbsp; [行为准则](./CODE_OF_CONDUCT.md)
+[30 秒接入](#30-秒接入) &nbsp;·&nbsp; [快速开始](#快速开始) &nbsp;·&nbsp; [特性](#特性) &nbsp;·&nbsp; [配置](#配置) &nbsp;·&nbsp; [安全模型](#安全模型) &nbsp;·&nbsp; [常见问题](#常见问题) &nbsp;·&nbsp; [贡献指南](./CONTRIBUTING.md) &nbsp;·&nbsp; [行为准则](./CODE_OF_CONDUCT.md)
 
 </div>
+
+---
+
+## 30 秒接入
+
+三种方式任选其一，效果相同：在你的仓库里生成一份 `.github/workflows/ci.yml`，自动继承全部企业级流水线。
+
+### 方式 A &nbsp; 一行命令安装（推荐）
+
+请在**你项目的根目录**（即包含 `.git` 的目录）下执行。
+
+**macOS / Linux / WSL / Git Bash**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/2029193370/ci-templates/main/scripts/install.sh | bash
+```
+
+**Windows PowerShell**
+
+```powershell
+iwr -useb https://raw.githubusercontent.com/2029193370/ci-templates/main/scripts/install.ps1 | iex
+```
+
+安装脚本会创建 `.github/workflows/ci.yml`，并打印三条提交命令。遇到以下情况会安全退出：
+
+- 当前目录不是 git 仓库；
+- `ci.yml` 已存在（会先询问是否覆盖，传入 `CI_TEMPLATES_FORCE=1` 可跳过询问）。
+
+如果你需要**完全可复现**的构建，可以把安装脚本本身也钉到某个发布 tag，而不是 `main`：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/2029193370/ci-templates/v2.1.0/scripts/install.sh | bash
+```
+
+> **安全说明**：你可以（也应该）在执行前先阅读脚本内容：
+> [`scripts/install.sh`](./scripts/install.sh) · [`scripts/install.ps1`](./scripts/install.ps1)。
+> 脚本只做一件事——把一份 YAML 文件下载到你的仓库里。不需要 sudo，不启动后台任务，不包含任何遥测。
+
+### 方式 B &nbsp; 点击 "Use this template" 按钮
+
+在仓库页面点击 **[Use this template](https://github.com/2029193370/ci-templates/generate)**（或直接用该链接），即可基于本模板**创建一个全新仓库**，已经预先包含 starter 结构。适合从零开始新建项目时使用。
+
+### 方式 C &nbsp; 手动复制（3 行）
+
+在你的仓库里创建 `.github/workflows/ci.yml`，写入以下内容然后 push：
+
+```yaml
+name: CI & Security Scan
+on: { push: { branches: [main] }, pull_request: { branches: [main] } }
+permissions: { contents: read }
+jobs:
+  ci:
+    uses: 2029193370/ci-templates/.github/workflows/reusable-ci.yml@v2
+```
+
+就这样——**8 行代码**换一条完整的企业级流水线。如需带完整输入注释的 starter 文件，见 [`starter/.github/workflows/ci.yml`](./starter/.github/workflows/ci.yml)。
+
+### 接入之后会发生什么？
+
+1. 你的**首次 push / pull request** 会触发 3 层流水线（仓库卫生 → 多语言 lint+build+test → 4 层安全）。
+2. 你项目**没有使用的语言**，对应的 Job 会秒级跳过。
+3. 本仓库每发布一个 `@v2.*` 版本，**你的仓库会在下一次 CI 触发时自动采用**——不会产生 PR，也不会收到邮件。
+
+想开启矩阵测试或自定义输入？请看 [配置 →](#配置)。
 
 ---
 
@@ -30,6 +94,7 @@
 - [项目动机](#项目动机)
 - [特性](#特性)
 - [架构](#架构)
+- [30 秒接入](#30-秒接入)
 - [快速开始](#快速开始)
 - [支持的技术栈](#支持的技术栈)
 - [配置](#配置)

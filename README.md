@@ -19,14 +19,79 @@ A single ~10-line drop-in `ci.yml` gives your repository a fully-fledged CI/CD p
 
 **English** &nbsp;|&nbsp; [简体中文](./README.zh-CN.md)
 
-[Quick Start](#quick-start) &nbsp;·&nbsp; [Features](#features) &nbsp;·&nbsp; [Configuration](#configuration) &nbsp;·&nbsp; [Security Model](#security-model) &nbsp;·&nbsp; [FAQ](#faq) &nbsp;·&nbsp; [Contributing](./CONTRIBUTING.md) &nbsp;·&nbsp; [Code of Conduct](./CODE_OF_CONDUCT.md)
+[30-Second Setup](#30-second-setup) &nbsp;·&nbsp; [Quick Start](#quick-start) &nbsp;·&nbsp; [Features](#features) &nbsp;·&nbsp; [Configuration](#configuration) &nbsp;·&nbsp; [Security Model](#security-model) &nbsp;·&nbsp; [FAQ](#faq) &nbsp;·&nbsp; [Contributing](./CONTRIBUTING.md) &nbsp;·&nbsp; [Code of Conduct](./CODE_OF_CONDUCT.md)
 
 </div>
 
 ---
 
+## 30-Second Setup
+
+Pick whichever style you prefer — all three give you the same result: a `.github/workflows/ci.yml` file that inherits the full enterprise pipeline.
+
+### Option A &nbsp; One-line installer (recommended)
+
+Run this from the **root of your project** (the directory containing `.git`).
+
+**macOS / Linux / WSL / Git Bash**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/2029193370/ci-templates/main/scripts/install.sh | bash
+```
+
+**Windows PowerShell**
+
+```powershell
+iwr -useb https://raw.githubusercontent.com/2029193370/ci-templates/main/scripts/install.ps1 | iex
+```
+
+The installer creates `.github/workflows/ci.yml`, then prints the three-command commit recipe. It aborts safely if:
+
+- you're not in a git repo, or
+- `ci.yml` already exists (it will ask before overwriting; set `CI_TEMPLATES_FORCE=1` to skip the prompt).
+
+For fully reproducible builds, pin the installer itself to a release tag instead of `main`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/2029193370/ci-templates/v2.1.0/scripts/install.sh | bash
+```
+
+> **Security note.** You can (and should) read the script before piping it to a shell:
+> [`scripts/install.sh`](./scripts/install.sh) · [`scripts/install.ps1`](./scripts/install.ps1).
+> The script only downloads a single YAML file into your repo — no elevated permissions, no background tasks, no telemetry.
+
+### Option B &nbsp; "Use this template" button
+
+Click **[Use this template](https://github.com/2029193370/ci-templates/generate)** on the repository page (or use the link) to create a brand-new repository pre-populated with the starter structure. Perfect if you're starting a project from scratch.
+
+### Option C &nbsp; Manual copy (3 lines)
+
+Create `.github/workflows/ci.yml` in your repository with these contents and push:
+
+```yaml
+name: CI & Security Scan
+on: { push: { branches: [main] }, pull_request: { branches: [main] } }
+permissions: { contents: read }
+jobs:
+  ci:
+    uses: 2029193370/ci-templates/.github/workflows/reusable-ci.yml@v2
+```
+
+That's it — **8 lines** for a full enterprise-grade pipeline. For the richer starter file with every input documented, see [`starter/.github/workflows/ci.yml`](./starter/.github/workflows/ci.yml).
+
+### What happens next?
+
+1. On your **first push / pull request**, the 3-layer pipeline runs (hygiene → multi-language lint+build+test → 4-layer security).
+2. Jobs for languages you don't use auto-detect and exit in seconds.
+3. Every time a new `@v2.*` release ships here, **your repository automatically picks it up on the next CI trigger** — no PR to merge, no email to read.
+
+Want matrix testing or non-default inputs? See [Configuration →](#configuration).
+
+---
+
 ## Table of Contents
 
+- [30-Second Setup](#30-second-setup)
 - [Why ci-templates](#why-ci-templates)
 - [Features](#features)
 - [Architecture](#architecture)
