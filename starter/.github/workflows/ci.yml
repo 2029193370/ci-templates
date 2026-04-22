@@ -17,7 +17,7 @@ permissions:
 jobs:
   ci:
     # Pin at the sliding major tag so you receive compatible updates automatically.
-    # Pin at an exact tag (e.g. @v2.1.0) if you need fully reproducible builds.
+    # Pin at an exact tag (e.g. @v2.0.0) if you need fully reproducible builds.
     uses: 2029193370/ci-templates/.github/workflows/reusable-ci.yml@v2
     # Uncomment what you need. Every input is optional and auto-defaults.
     # with:

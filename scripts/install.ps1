@@ -5,10 +5,10 @@
 #   iwr -useb https://raw.githubusercontent.com/2029193370/ci-templates/main/scripts/install.ps1 | iex
 #
 # Or, to pin to a specific tag (recommended for reproducibility):
-#   iwr -useb https://raw.githubusercontent.com/2029193370/ci-templates/v2.1.0/scripts/install.ps1 | iex
+#   iwr -useb https://raw.githubusercontent.com/2029193370/ci-templates/v2.0.0/scripts/install.ps1 | iex
 #
 # Environment overrides:
-#   $env:CI_TEMPLATES_REF   = 'v2.1.0'  # branch or tag (default: main)
+#   $env:CI_TEMPLATES_REF   = 'v2.0.0'  # branch or tag (default: main)
 #   $env:CI_TEMPLATES_FORCE = '1'       # overwrite existing ci.yml without prompting
 # ----------------------------------------------------------------------------
 

@@ -213,23 +213,53 @@ jobs:
 
       - name: Detect Node.js project
         id: detect
+        shell: bash
         run: |
-          if [ -n "$(find . -maxdepth 3 -name package.json -not -path '*/node_modules/*' -print -quit)" ]; then
-            echo "found=true"  >> "$GITHUB_OUTPUT"
+          manifest=''
+          if [ -f package.json ]; then
+            manifest='package.json'
+          else
+            manifest="$(find . -maxdepth 4 \
+              \( -path '*/node_modules/*' -o -path '*/.git/*' \) -prune -o \
+              -mindepth 2 \
+              -name 'package.json' -print 2>/dev/null | LC_ALL=C sort | head -n1)"
+          fi
+
+          if [ -n "$manifest" ]; then
+            project_dir="$(dirname "$manifest")"
+            [ "$project_dir" = "." ] || project_dir="${project_dir#./}"
+            echo "found=true" >> "$GITHUB_OUTPUT"
+            echo "project_dir=$project_dir" >> "$GITHUB_OUTPUT"
+            echo "manifest_path=$manifest" >> "$GITHUB_OUTPUT"
+            if [ -f "$project_dir/package-lock.json" ]; then
+              echo "has_lockfile=true" >> "$GITHUB_OUTPUT"
+              echo "lockfile_path=$project_dir/package-lock.json" >> "$GITHUB_OUTPUT"
+            else
+              echo "has_lockfile=false" >> "$GITHUB_OUTPUT"
+            fi
+            echo "Using Node.js project in $project_dir"
           else
             echo "found=false" >> "$GITHUB_OUTPUT"
             echo "No package.json - skipping"
           fi
 
-      - name: Setup Node.js
-        if: steps.detect.outputs.found == 'true'
+      - name: Setup Node.js (cached)
+        if: steps.detect.outputs.found == 'true' && steps.detect.outputs.has_lockfile == 'true'
         uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
           node-version: ${{ matrix.node }}
           cache: 'npm'
+          cache-dependency-path: ${{ steps.detect.outputs.lockfile_path }}
+
+      - name: Setup Node.js
+        if: steps.detect.outputs.found == 'true' && steps.detect.outputs.has_lockfile != 'true'
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: ${{ matrix.node }}
 
       - name: Install, lint, build, test
         if: steps.detect.outputs.found == 'true'
+        working-directory: ${{ steps.detect.outputs.project_dir }}
         run: |
           if [ -f package-lock.json ]; then
             npm ci || { echo "::error::npm ci failed"; exit 1; }
@@ -246,11 +276,11 @@ jobs:
           exit $failed
 
       - name: Upload coverage
-        if: steps.detect.outputs.found == 'true' && always() && hashFiles('coverage/lcov.info', 'coverage/clover.xml', 'coverage/cobertura-coverage.xml') != ''
+        if: steps.detect.outputs.found == 'true' && always()
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: coverage-node-${{ matrix.node }}
-          path: coverage/
+          path: ${{ steps.detect.outputs.project_dir }}/coverage/
           retention-days: 7
           if-no-files-found: ignore
 
@@ -278,8 +308,45 @@ jobs:
         run: |
           maven=false
           gradle=false
-          if find . -maxdepth 5 -name 'pom.xml' -not -path '*/node_modules/*' -print -quit 2>/dev/null | grep -q .; then maven=true; fi
-          if find . -maxdepth 5 \( -name 'build.gradle' -o -name 'build.gradle.kts' \) -not -path '*/node_modules/*' -print -quit 2>/dev/null | grep -q .; then gradle=true; fi
+          maven_path=''
+          gradle_path=''
+
+          if [ -f pom.xml ]; then
+            maven_path='pom.xml'
+          else
+            maven_path="$(find . -maxdepth 5 \
+              \( -path '*/node_modules/*' -o -path '*/.git/*' \) -prune -o \
+              -mindepth 2 \
+              -name 'pom.xml' -print 2>/dev/null | LC_ALL=C sort | head -n1)"
+          fi
+
+          if [ -f build.gradle ]; then
+            gradle_path='build.gradle'
+          elif [ -f build.gradle.kts ]; then
+            gradle_path='build.gradle.kts'
+          else
+            gradle_path="$(find . -maxdepth 5 \
+              \( -path '*/node_modules/*' -o -path '*/.git/*' \) -prune -o \
+              -mindepth 2 \
+              \( -name 'build.gradle' -o -name 'build.gradle.kts' \) -print 2>/dev/null | LC_ALL=C sort | head -n1)"
+          fi
+
+          if [ -n "$maven_path" ]; then
+            maven=true
+            maven_dir="$(dirname "$maven_path")"
+            [ "$maven_dir" = "." ] || maven_dir="${maven_dir#./}"
+            echo "maven_dir=$maven_dir" >> "$GITHUB_OUTPUT"
+            echo "Using Maven project in $maven_dir"
+          fi
+
+          if [ -n "$gradle_path" ]; then
+            gradle=true
+            gradle_dir="$(dirname "$gradle_path")"
+            [ "$gradle_dir" = "." ] || gradle_dir="${gradle_dir#./}"
+            echo "gradle_dir=$gradle_dir" >> "$GITHUB_OUTPUT"
+            echo "Using Gradle project in $gradle_dir"
+          fi
+
           echo "maven=$maven"   >> "$GITHUB_OUTPUT"
           echo "gradle=$gradle" >> "$GITHUB_OUTPUT"
 
@@ -310,11 +377,13 @@ jobs:
 
       - name: Maven verify
         if: steps.detect.outputs.maven == 'true'
+        working-directory: ${{ steps.detect.outputs.maven_dir }}
         run: |
           if [ -f mvnw ]; then chmod +x mvnw && ./mvnw -B -ntp verify; else mvn -B -ntp verify; fi
 
       - name: Gradle check+assemble
         if: steps.detect.outputs.maven == 'false' && steps.detect.outputs.gradle == 'true'
+        working-directory: ${{ steps.detect.outputs.gradle_dir }}
         run: |
           if [ -f gradlew ]; then chmod +x gradlew && ./gradlew check assemble --no-daemon; else gradle check assemble --no-daemon; fi
 
@@ -349,12 +418,44 @@ jobs:
 
       - name: Detect PHP project
         id: detect
+        shell: bash
         run: |
-          if [ -f composer.json ] || find . -maxdepth 5 -name '*.php' -not -path './vendor/*' -print -quit 2>/dev/null | grep -q .; then
-            echo "found=true"  >> "$GITHUB_OUTPUT"
+          composer_path=''
+          project_dir='.'
+          has_composer=false
+
+          if [ -f composer.json ]; then
+            composer_path='composer.json'
+          else
+            composer_path="$(find . -maxdepth 5 \
+              \( -path '*/vendor/*' -o -path '*/node_modules/*' -o -path '*/.git/*' \) -prune -o \
+              -mindepth 2 \
+              -name 'composer.json' -print 2>/dev/null | LC_ALL=C sort | head -n1)"
+          fi
+
+          if [ -n "$composer_path" ]; then
+            has_composer=true
+            project_dir="$(dirname "$composer_path")"
+            [ "$project_dir" = "." ] || project_dir="${project_dir#./}"
+          elif find . -maxdepth 5 \
+              \( -path '*/vendor/*' -o -path '*/node_modules/*' -o -path '*/.git/*' \) -prune -o \
+              -name '*.php' -print -quit 2>/dev/null | grep -q .; then
+            :
           else
             echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "No PHP files - skipping"
+            exit 0
           fi
+
+          echo "found=true" >> "$GITHUB_OUTPUT"
+          echo "project_dir=$project_dir" >> "$GITHUB_OUTPUT"
+          echo "has_composer=$has_composer" >> "$GITHUB_OUTPUT"
+          if [ -f "$project_dir/composer.lock" ]; then
+            echo "has_lockfile=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_lockfile=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Using PHP project in $project_dir"
 
       - name: Setup PHP
         if: steps.detect.outputs.found == 'true'
@@ -364,15 +465,16 @@ jobs:
           tools: composer:v2
 
       - name: Cache Composer
-        if: steps.detect.outputs.found == 'true' && hashFiles('composer.lock') != ''
+        if: steps.detect.outputs.has_composer == 'true' && steps.detect.outputs.has_lockfile == 'true'
         uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
         with:
-          path: vendor
-          key: composer-${{ runner.os }}-php${{ inputs.php-version }}-${{ hashFiles('composer.lock') }}
+          path: ${{ steps.detect.outputs.project_dir }}/vendor
+          key: composer-${{ runner.os }}-php${{ inputs.php-version }}-${{ steps.detect.outputs.project_dir }}-${{ hashFiles('**/composer.lock') }}
           restore-keys: composer-${{ runner.os }}-php${{ inputs.php-version }}-
 
       - name: Install, syntax-check, test
         if: steps.detect.outputs.found == 'true'
+        working-directory: ${{ steps.detect.outputs.project_dir }}
         run: |
           failed=0
           if [ -f composer.json ]; then
@@ -414,9 +516,31 @@ jobs:
 
       - name: Detect Python project
         id: detect
+        shell: bash
         run: |
-          if [ -f requirements.txt ] || [ -f Pipfile ] || [ -f pyproject.toml ] || [ -f setup.py ]; then
-            echo "found=true"  >> "$GITHUB_OUTPUT"
+          manifest=''
+          if [ -f pyproject.toml ]; then
+            manifest='pyproject.toml'
+          elif [ -f requirements.txt ]; then
+            manifest='requirements.txt'
+          elif [ -f setup.py ]; then
+            manifest='setup.py'
+          elif [ -f Pipfile ]; then
+            manifest='Pipfile'
+          else
+            manifest="$(find . -maxdepth 4 \
+              \( -path '*/.git/*' -o -path '*/node_modules/*' -o -path '*/.venv/*' -o -path '*/venv/*' \) -prune -o \
+              -mindepth 2 \
+              \( -name 'pyproject.toml' -o -name 'requirements.txt' -o -name 'setup.py' -o -name 'Pipfile' \) -print 2>/dev/null | LC_ALL=C sort | head -n1)"
+          fi
+
+          if [ -n "$manifest" ]; then
+            project_dir="$(dirname "$manifest")"
+            [ "$project_dir" = "." ] || project_dir="${project_dir#./}"
+            echo "found=true" >> "$GITHUB_OUTPUT"
+            echo "project_dir=$project_dir" >> "$GITHUB_OUTPUT"
+            echo "manifest_path=$manifest" >> "$GITHUB_OUTPUT"
+            echo "Using Python project in $project_dir"
           else
             echo "found=false" >> "$GITHUB_OUTPUT"
           fi
@@ -429,18 +553,19 @@ jobs:
 
       - name: Lint + test + coverage
         if: steps.detect.outputs.found == 'true'
+        working-directory: ${{ steps.detect.outputs.project_dir }}
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 pytest pytest-cov coverage || true
+          python -m pip install flake8 pytest pytest-cov coverage
 
-          if [ -f requirements.txt ]; then pip install -r requirements.txt || true; fi
-          if [ -f pyproject.toml ]; then pip install -e . || true; fi
+          if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
+          if [ -f pyproject.toml ] || [ -f setup.py ]; then python -m pip install -e .; fi
 
           failed=0
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics \
             || { echo "::error::Flake8 fatal issues"; failed=1; }
 
-          if find . -maxdepth 3 -name 'test_*.py' -o -name '*_test.py' -print -quit 2>/dev/null | grep -q .; then
+          if [ -d tests ] || find . -maxdepth 3 \( -name 'test_*.py' -o -name '*_test.py' \) -print -quit 2>/dev/null | grep -q .; then
             pytest --cov=. --cov-report=xml --cov-report=term || { echo "::error::pytest failed"; failed=1; }
           else
             echo "No pytest tests detected - skipping"
@@ -448,11 +573,11 @@ jobs:
           exit $failed
 
       - name: Upload Python coverage
-        if: steps.detect.outputs.found == 'true' && hashFiles('coverage.xml') != ''
+        if: steps.detect.outputs.found == 'true'
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: coverage-python-${{ matrix.py }}
-          path: coverage.xml
+          path: ${{ steps.detect.outputs.project_dir }}/coverage.xml
           retention-days: 7
           if-no-files-found: ignore
 
@@ -476,8 +601,32 @@ jobs:
 
       - name: Detect Go project
         id: detect
+        shell: bash
         run: |
-          if [ -f go.mod ]; then echo "found=true" >> "$GITHUB_OUTPUT"; else echo "found=false" >> "$GITHUB_OUTPUT"; fi
+          manifest=''
+          if [ -f go.mod ]; then
+            manifest='go.mod'
+          else
+            manifest="$(find . -maxdepth 5 \
+              \( -path '*/.git/*' -o -path '*/node_modules/*' \) -prune -o \
+              -mindepth 2 \
+              -name 'go.mod' -print 2>/dev/null | LC_ALL=C sort | head -n1)"
+          fi
+
+          if [ -n "$manifest" ]; then
+            project_dir="$(dirname "$manifest")"
+            [ "$project_dir" = "." ] || project_dir="${project_dir#./}"
+            cache_path="$project_dir/go.mod"
+            if [ -f "$project_dir/go.sum" ]; then
+              cache_path="$project_dir/go.sum"
+            fi
+            echo "found=true" >> "$GITHUB_OUTPUT"
+            echo "project_dir=$project_dir" >> "$GITHUB_OUTPUT"
+            echo "cache_path=$cache_path" >> "$GITHUB_OUTPUT"
+            echo "Using Go project in $project_dir"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Setup Go
         if: steps.detect.outputs.found == 'true'
@@ -485,9 +634,11 @@ jobs:
         with:
           go-version: ${{ inputs.go-version }}
           cache: true
+          cache-dependency-path: ${{ steps.detect.outputs.cache_path }}
 
       - name: Vet, build, test
         if: steps.detect.outputs.found == 'true'
+        working-directory: ${{ steps.detect.outputs.project_dir }}
         run: |
           failed=0
           go vet ./...     || { echo "::error::go vet failed";   failed=1; }
@@ -497,11 +648,11 @@ jobs:
           exit $failed
 
       - name: Upload Go coverage
-        if: steps.detect.outputs.found == 'true' && hashFiles('coverage.out') != ''
+        if: steps.detect.outputs.found == 'true'
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: coverage-go
-          path: coverage.out
+          path: ${{ steps.detect.outputs.project_dir }}/coverage.out
           retention-days: 7
           if-no-files-found: ignore
 
@@ -525,9 +676,28 @@ jobs:
 
       - name: Detect .NET project
         id: detect
+        shell: bash
         run: |
-          if find . -maxdepth 5 \( -name '*.csproj' -o -name '*.sln' -o -name '*.fsproj' \) -print -quit 2>/dev/null | grep -q .; then
-            echo "found=true"  >> "$GITHUB_OUTPUT"
+          entry_path=''
+
+          entry_path="$(find . -maxdepth 1 -name '*.sln' -print 2>/dev/null | LC_ALL=C sort | head -n1)"
+          if [ -z "$entry_path" ]; then
+            entry_path="$(find . -maxdepth 1 \( -name '*.csproj' -o -name '*.fsproj' \) -print 2>/dev/null | LC_ALL=C sort | head -n1)"
+          fi
+          if [ -z "$entry_path" ]; then
+            entry_path="$(find . -maxdepth 5 \
+              \( -path '*/.git/*' -o -path '*/node_modules/*' -o -path '*/bin/*' -o -path '*/obj/*' \) -prune -o \
+              -mindepth 2 \
+              \( -name '*.sln' -o -name '*.csproj' -o -name '*.fsproj' \) -print 2>/dev/null | LC_ALL=C sort | head -n1)"
+          fi
+
+          if [ -n "$entry_path" ]; then
+            project_dir="$(dirname "$entry_path")"
+            [ "$project_dir" = "." ] || project_dir="${project_dir#./}"
+            echo "found=true" >> "$GITHUB_OUTPUT"
+            echo "project_dir=$project_dir" >> "$GITHUB_OUTPUT"
+            echo "entry_name=$(basename "$entry_path")" >> "$GITHUB_OUTPUT"
+            echo "Using .NET project in $project_dir"
           else
             echo "found=false" >> "$GITHUB_OUTPUT"
           fi
@@ -540,10 +710,14 @@ jobs:
 
       - name: Restore, build, test
         if: steps.detect.outputs.found == 'true'
+        working-directory: ${{ steps.detect.outputs.project_dir }}
+        env:
+          DOTNET_ENTRY: ${{ steps.detect.outputs.entry_name }}
         run: |
-          dotnet restore                                          || { echo "::error::.NET restore failed"; exit 1; }
-          dotnet build --no-restore --configuration Release       || { echo "::error::.NET build failed";   exit 1; }
-          dotnet test  --no-build   --configuration Release \
+          dotnet restore "$DOTNET_ENTRY"                         || { echo "::error::.NET restore failed"; exit 1; }
+          dotnet build "$DOTNET_ENTRY" --no-restore --configuration Release \
+            || { echo "::error::.NET build failed"; exit 1; }
+          dotnet test "$DOTNET_ENTRY" --no-build --configuration Release \
             --collect:"XPlat Code Coverage" \
             --logger:"trx" || { echo "::error::.NET test failed"; exit 1; }
 

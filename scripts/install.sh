@@ -6,7 +6,7 @@
 #   curl -fsSL https://raw.githubusercontent.com/2029193370/ci-templates/main/scripts/install.sh | bash
 #
 # Or, to pin to a specific tag (recommended for reproducibility):
-#   curl -fsSL https://raw.githubusercontent.com/2029193370/ci-templates/v2.1.0/scripts/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/2029193370/ci-templates/v2.0.0/scripts/install.sh | bash
 #
 # Environment overrides:
 #   CI_TEMPLATES_REF   branch or tag to pull starter from (default: main)

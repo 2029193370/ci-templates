@@ -3,7 +3,7 @@
 All notable changes to this project will be documented in this file.
 This file is automatically maintained by [release-please](https://github.com/googleapis/release-please).
 
-## [1.0.0] - 2026-04-22
+## [2.0.0] - 2026-04-22
 
 Initial tagged release. Establishes the reusable CI template.
 
@@ -14,4 +14,4 @@ Initial tagged release. Establishes the reusable CI template.
 - Layer 3 optional Codecov upload
 - CodeQL, Yamllint and Dependabot for this repository
 
-[1.0.0]: https://github.com/2029193370/ci-templates/releases/tag/v1.0.0
+[2.0.0]: https://github.com/2029193370/ci-templates/releases/tag/v2.0.0

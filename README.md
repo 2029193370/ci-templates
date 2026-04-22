@@ -53,7 +53,7 @@ The installer creates `.github/workflows/ci.yml`, then prints the three-command 
 For fully reproducible builds, pin the installer itself to a release tag instead of `main`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2029193370/ci-templates/v2.1.0/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/2029193370/ci-templates/v2.0.0/scripts/install.sh | bash
 ```
 
 > **Security note.** You can (and should) read the script before piping it to a shell:
@@ -365,7 +365,7 @@ This project follows [Semantic Versioning 2.0.0](https://semver.org/). Releases 
 | Reference style in your `ci.yml` | Auto-updates | Reproducibility | Recommended for |
 |----------------------------------|--------------|-----------------|-----------------|
 | `@v2` (sliding major) | Yes, on every CI run | Medium | Most projects (**default**) |
-| `@v2.1.0` (exact tag) | No | High | Regulated / audited environments |
+| `@v2.0.0` (exact tag) | No | High | Regulated / audited environments |
 | `@<40-char SHA>` | No | Highest | Maximum supply-chain paranoia |
 | `@main` | Yes, very aggressively | Low | Local testing of this repo only |
 
@@ -429,7 +429,7 @@ Yes, if you pin `@v2`. Every release we publish is picked up on your repository'
 
 ### How do I pin for maximum reproducibility?
 
-Replace `@v2` with an exact tag like `@v2.1.0`, or with a 40-character commit SHA. You will then opt out of automatic updates.
+Replace `@v2` with an exact tag like `@v2.0.0`, or with a 40-character commit SHA. You will then opt out of automatic updates.
 
 ### A language job I don't use is listed as skipped — is that a problem?
 
