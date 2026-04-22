@@ -2,12 +2,13 @@ name: CI & Security Scan
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ['main']
   pull_request:
-    branches: [ "main" ]
+    branches: ['main']
+  workflow_dispatch:
 
-  concurrency:
-  group: ${{ github.workflow }}-${{ github.ref_name }}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -16,11 +17,16 @@ permissions:
 jobs:
   ci:
     uses: 2029193370/ci-templates/.github/workflows/reusable-ci.yml@main
+    # Uncomment the inputs you need; omitted ones use sensible defaults.
+    # The reusable workflow auto-detects which language jobs to run.
     # with:
-      # 按项目需要取消注释并修改版本，不需要的参数保持注释即可
-      # node-version: '22'       # Node.js / TypeScript / Next.js
-      # java-version: '17'       # Java (Maven / Gradle)
-      # php-version: '8.2'       # PHP / Laravel
-      # python-version: '3.11'   # Python / Django
-      # go-version: '1.22'       # Go
-      # dotnet-version: '8.0'    # .NET / C#
+    #   node-version: '22'       # Node.js / TypeScript / Next.js
+    #   java-version: '21'       # Java LTS (Maven / Gradle)
+    #   php-version: '8.3'       # PHP / Laravel
+    #   python-version: '3.12'   # Python / Django / FastAPI
+    #   go-version: '1.23'       # Go
+    #   dotnet-version: '8.0'    # .NET / C#
+    #   trivy-severity: 'CRITICAL,HIGH'
+    #   trivy-exit-code: '1'
+    # secrets:
+    #   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

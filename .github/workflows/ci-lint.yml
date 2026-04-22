@@ -2,21 +2,34 @@ name: CI - YAML Lint
 
 on:
   pull_request:
-    branches: [ 'main' ]
+    branches: ['main']
+    paths:
+      - '.github/workflows/**'
+      - '.yamllint'
+      - '.yamllint.yml'
   push:
-    branches: [ 'main' ]
+    branches: ['main']
+    paths:
+      - '.github/workflows/**'
+      - '.yamllint'
+      - '.yamllint.yml'
+
+permissions:
+  contents: read
 
 jobs:
   yamllint:
     name: Yamllint for workflow files
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Normalize workflow line endings (CRLF -> LF)
         run: |
-          find .github/workflows -type f \( -name "*.yml" -o -name "*.yaml" \) -print0 | xargs -0 -r sed -i 's/\r$//' || true
+          find .github/workflows -type f \( -name "*.yml" -o -name "*.yaml" \) -print0 \
+            | xargs -0 -r sed -i 's/\r$//' || true
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -30,10 +43,4 @@ jobs:
 
       - name: Run yamllint
         run: |
-          cat > .yamllint <<'EOF'
-          extends: default
-          rules:
-            line-length:
-              max: 200
-EOF
-          yamllint -c .yamllint .github/workflows || exit 1
+          yamllint -c .yamllint .github/workflows
