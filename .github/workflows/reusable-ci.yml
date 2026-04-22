@@ -144,24 +144,22 @@ jobs:
           fi
 
   # ==========================================
-  # Layer 1: 代码质量检查（全量执行，不中断）
+  # Layer 1: 代码质量检查（并行 job）
   # ==========================================
-  lint-and-build:
-    name: Layer 1 - Lint & Build Check
+  node-check:
+    name: Layer 1 - Node.js Lint & Build
     runs-on: ubuntu-latest
     needs: repo-hygiene
-    if: ${{ !cancelled() }}
     timeout-minutes: 20
+    if: ${{ !cancelled() }}
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      # ── Node.js / TypeScript / Next.js / React ─
       - name: Setup Node.js
         id: setup-node
         if: hashFiles('package.json') != ''
         uses: actions/setup-node@v4
-        continue-on-error: true
         with:
           node-version: ${{ inputs.node-version }}
           cache: 'npm'
@@ -169,7 +167,6 @@ jobs:
       - name: Node.js — Install, Lint & Build
         id: check-node
         if: hashFiles('package.json') != '' && steps.setup-node.outcome == 'success'
-        continue-on-error: true
         run: |
           npm ci || { echo "::error::Node.js 依赖安装失败，请检查 package-lock.json 是否与 package.json 同步"; exit 1; }
 
@@ -178,21 +175,47 @@ jobs:
           npm run build --if-present || { echo "::error::Node.js Build 构建失败"; failed=1; }
           exit $failed
 
-      # ── Java (Maven / Gradle) ──────────────────
+  java-check:
+    name: Layer 1 - Java Build
+    runs-on: ubuntu-latest
+    needs: repo-hygiene
+    timeout-minutes: 20
+    if: ${{ !cancelled() }}
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
       - name: Setup Java
         id: setup-java
         if: hashFiles('pom.xml') != '' || hashFiles('build.gradle') != '' || hashFiles('build.gradle.kts') != ''
         uses: actions/setup-java@v4
-        continue-on-error: true
         with:
           java-version: ${{ inputs.java-version }}
           distribution: 'temurin'
-          cache: ${{ hashFiles('pom.xml') != '' && 'maven' || 'gradle' }}
+
+      - name: Cache Maven local repository
+        if: hashFiles('pom.xml') != ''
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: maven-${{ runner.os }}-pom-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            maven-${{ runner.os }}-pom-
+
+      - name: Cache Gradle
+        if: hashFiles('build.gradle') != '' || hashFiles('build.gradle.kts') != ''
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
 
       - name: Java (Maven) — Compile
         id: check-maven
         if: hashFiles('pom.xml') != '' && steps.setup-java.outcome == 'success'
-        continue-on-error: true
         run: |
           if [ -f "mvnw" ]; then
             chmod +x mvnw
@@ -204,7 +227,6 @@ jobs:
       - name: Java (Gradle) — Assemble
         id: check-gradle
         if: hashFiles('pom.xml') == '' && (hashFiles('build.gradle') != '' || hashFiles('build.gradle.kts') != '') && steps.setup-java.outcome == 'success'
-        continue-on-error: true
         run: |
           if [ -f "gradlew" ]; then
             chmod +x gradlew
@@ -213,12 +235,20 @@ jobs:
             gradle assemble --no-daemon
           fi
 
-      # ── PHP ────────────────────────────────────
+  php-check:
+    name: Layer 1 - PHP Install & Syntax
+    runs-on: ubuntu-latest
+    needs: repo-hygiene
+    timeout-minutes: 20
+    if: ${{ !cancelled() }}
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
       - name: Setup PHP
         id: setup-php
         if: hashFiles('composer.json') != '' || hashFiles('**/*.php') != ''
         uses: shivammathur/setup-php@v2
-        continue-on-error: true
         with:
           php-version: ${{ inputs.php-version }}
           tools: composer:v2
@@ -235,7 +265,6 @@ jobs:
       - name: PHP — Install & Syntax Check
         id: check-php
         if: (hashFiles('composer.json') != '' || hashFiles('**/*.php') != '') && steps.setup-php.outcome == 'success'
-        continue-on-error: true
         run: |
           failed=0
 
@@ -248,12 +277,20 @@ jobs:
 
           exit $failed
 
-      # ── Python ─────────────────────────────────
+  python-check:
+    name: Layer 1 - Python Lint
+    runs-on: ubuntu-latest
+    needs: repo-hygiene
+    timeout-minutes: 20
+    if: ${{ !cancelled() }}
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
       - name: Setup Python
         id: setup-python
         if: hashFiles('requirements.txt') != '' || hashFiles('Pipfile') != '' || hashFiles('pyproject.toml') != ''
         uses: actions/setup-python@v5
-        continue-on-error: true
         with:
           python-version: ${{ inputs.python-version }}
           cache: 'pip'
@@ -261,82 +298,100 @@ jobs:
       - name: Python — Flake8 Lint
         id: check-python
         if: (hashFiles('requirements.txt') != '' || hashFiles('Pipfile') != '' || hashFiles('pyproject.toml') != '') && steps.setup-python.outcome == 'success'
-        continue-on-error: true
         run: |
           pip install flake8 || { echo "::error::Flake8 安装失败"; exit 1; }
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
 
-      # ── Go ──────────────────────────────────────
+  go-check:
+    name: Layer 1 - Go Vet & Build
+    runs-on: ubuntu-latest
+    needs: repo-hygiene
+    timeout-minutes: 20
+    if: ${{ !cancelled() }}
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
       - name: Setup Go
         id: setup-go
         if: hashFiles('go.mod') != ''
         uses: actions/setup-go@v5
-        continue-on-error: true
         with:
           go-version: ${{ inputs.go-version }}
 
       - name: Go — Vet & Build
         id: check-go
         if: hashFiles('go.mod') != '' && steps.setup-go.outcome == 'success'
-        continue-on-error: true
         run: |
           failed=0
           go vet ./... || { echo "::error::Go vet 静态分析未通过"; failed=1; }
           go build ./... || { echo "::error::Go build 构建失败"; failed=1; }
           exit $failed
 
-      # ── .NET (C#) ──────────────────────────────
+  dotnet-check:
+    name: Layer 1 - .NET Restore & Build
+    runs-on: ubuntu-latest
+    needs: repo-hygiene
+    timeout-minutes: 20
+    if: ${{ !cancelled() }}
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
       - name: Setup .NET
         id: setup-dotnet
         if: hashFiles('**/*.csproj') != '' || hashFiles('**/*.sln') != ''
         uses: actions/setup-dotnet@v4
-        continue-on-error: true
         with:
           dotnet-version: ${{ inputs.dotnet-version }}
 
       - name: .NET — Restore & Build
         id: check-dotnet
         if: (hashFiles('**/*.csproj') != '' || hashFiles('**/*.sln') != '') && steps.setup-dotnet.outcome == 'success'
-        continue-on-error: true
         run: |
           dotnet restore || { echo "::error::.NET 依赖还原失败"; exit 1; }
           dotnet build --no-restore || { echo "::error::.NET 构建失败"; exit 1; }
 
-      # ── Dockerfile ─────────────────────────────
+  docker-check:
+    name: Layer 1 - Dockerfile Lint
+    runs-on: ubuntu-latest
+    needs: repo-hygiene
+    timeout-minutes: 20
+    if: ${{ !cancelled() }}
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
       - name: Lint Dockerfiles (Hadolint)
         id: check-docker
         if: hashFiles('**/Dockerfile') != ''
         uses: hadolint/hadolint-action@v3.1.0
-        continue-on-error: true
         with:
           recursive: true
           failure-threshold: warning
 
-      # ── 汇总 ───────────────────────────────────
-      - name: Layer 1 — Check Results
-        if: ${{ !cancelled() }}
+  layer1-aggregate:
+    name: Layer 1 - Aggregate Results
+    runs-on: ubuntu-latest
+    needs: [node-check, java-check, php-check, python-check, go-check, dotnet-check, docker-check]
+    if: ${{ always() }}
+    steps:
+      - name: Aggregate Layer 1 Results
         run: |
           echo "=== Layer 1 检查结果汇总 ==="
           failed=""
 
-          [ "${{ steps.setup-node.outcome }}" = "failure" ] && failed="${failed}  - Node.js 环境安装失败\n"
-          [ "${{ steps.check-node.outcome }}" = "failure" ] && failed="${failed}  - Node.js 检查未通过\n"
-          [ "${{ steps.setup-java.outcome }}" = "failure" ] && failed="${failed}  - Java 环境安装失败\n"
-          [ "${{ steps.check-maven.outcome }}" = "failure" ] && failed="${failed}  - Java (Maven) 编译失败\n"
-          [ "${{ steps.check-gradle.outcome }}" = "failure" ] && failed="${failed}  - Java (Gradle) 编译失败\n"
-          [ "${{ steps.setup-php.outcome }}" = "failure" ] && failed="${failed}  - PHP 环境安装失败\n"
-          [ "${{ steps.check-php.outcome }}" = "failure" ] && failed="${failed}  - PHP 检查未通过\n"
-          [ "${{ steps.setup-python.outcome }}" = "failure" ] && failed="${failed}  - Python 环境安装失败\n"
-          [ "${{ steps.check-python.outcome }}" = "failure" ] && failed="${failed}  - Python Lint 未通过\n"
-          [ "${{ steps.setup-go.outcome }}" = "failure" ] && failed="${failed}  - Go 环境安装失败\n"
-          [ "${{ steps.check-go.outcome }}" = "failure" ] && failed="${failed}  - Go 检查未通过\n"
-          [ "${{ steps.setup-dotnet.outcome }}" = "failure" ] && failed="${failed}  - .NET 环境安装失败\n"
-          [ "${{ steps.check-dotnet.outcome }}" = "failure" ] && failed="${failed}  - .NET 构建失败\n"
-          [ "${{ steps.check-docker.outcome }}" = "failure" ] && failed="${failed}  - Dockerfile 检查未通过\n"
+          [ "${{ needs.node-check.result }}" = "failure" ] && failed="${failed}  - Node.js 检查未通过\n"
+          [ "${{ needs.java-check.result }}" = "failure" ] && failed="${failed}  - Java 检查未通过\n"
+          [ "${{ needs.php-check.result }}" = "failure" ] && failed="${failed}  - PHP 检查未通过\n"
+          [ "${{ needs.python-check.result }}" = "failure" ] && failed="${failed}  - Python 检查未通过\n"
+          [ "${{ needs.go-check.result }}" = "failure" ] && failed="${failed}  - Go 检查未通过\n"
+          [ "${{ needs.dotnet-check.result }}" = "failure" ] && failed="${failed}  - .NET 检查未通过\n"
+          [ "${{ needs.docker-check.result }}" = "failure" ] && failed="${failed}  - Dockerfile 检查未通过\n"
 
           if [ -n "$failed" ]; then
             printf "\n以下检查未通过:\n%b\n" "$failed"
-            echo "请展开上方对应步骤查看详细错误日志"
+            echo "请展开对应步骤查看详细错误日志"
             echo "::error::Layer 1 存在未通过的检查项，请修复后重新提交"
             exit 1
           fi
@@ -349,7 +404,7 @@ jobs:
   security-scan:
     name: Layer 2 - Security & Secret Scan
     runs-on: ubuntu-latest
-    needs: lint-and-build
+    needs: layer1-aggregate
     if: ${{ !cancelled() }}
     timeout-minutes: 15
     steps:
