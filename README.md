@@ -109,6 +109,24 @@ jobs:
 
 ---
 
+## 下游用户要不要配 Dependabot？
+
+**对 CI 模板本身：不需要。**  
+你 `uses: ...@v2` 引用的是滑动主版本 tag，每次本仓库发 `v2.x.y`，`v2` 会被 `release-please` 自动 fast-forward 到最新，下游**下次 CI 运行**就自动拿到新 SHA。**零维护成本。**
+
+**对你自己项目的业务依赖（npm/pip/maven/…）：看情况。**  
+如果你希望 Dependabot 帮你追你自己 `package.json` / `requirements.txt` 里的依赖，可以复制 [`starter/.github/dependabot.yml`](./starter/.github/dependabot.yml) 到你仓库的 `.github/dependabot.yml`，并删掉用不到的 ecosystem 块。  
+该模板已做"静音预设"：
+
+- 每生态每周最多 1 个 grouped PR
+- `open-pull-requests-limit: 3` 限流
+- 跨 major 也合并到同一个 PR，避免爆 PR 潮
+
+**如果你被 Dependabot 邮件淹没：**  
+到 [github.com/settings/notifications](https://github.com/settings/notifications) → 找到 **Dependabot alerts** → 取消勾选 **Email**，只保留 Web 通知。这是账户级一次性生效的。
+
+---
+
 ## 本仓库工作流总览
 
 | 文件 | 作用 | 频率 |
