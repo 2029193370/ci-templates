@@ -24,9 +24,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # CodeQL skips languages not found in the repo automatically.
-        # Trim this matrix to save Actions minutes.
-        language: ['javascript-typescript', 'python', 'java-kotlin']
+        # This repo only contains GitHub Actions workflow templates,
+        # so we only scan the `actions` language (introduced in CodeQL
+        # Action v4). Consumer repos should supply their own CodeQL
+        # workflow with the languages relevant to their source.
+        language: ['actions']
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -36,9 +38,6 @@ jobs:
         with:
           languages: ${{ matrix.language }}
           queries: security-extended,security-and-quality
-
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v4
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
