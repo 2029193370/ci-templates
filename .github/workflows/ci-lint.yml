@@ -26,4 +26,10 @@ jobs:
 
       - name: Run yamllint
         run: |
-          yamllint -c '{extends: default, rules: {line-length: {max: 200}}}' .github/workflows || exit 1
+          cat > .yamllint <<'EOF'
+          extends: default
+          rules:
+            line-length:
+              max: 200
+EOF
+          yamllint -c .yamllint .github/workflows || exit 1
