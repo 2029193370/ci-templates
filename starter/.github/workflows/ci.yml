@@ -31,7 +31,7 @@ jobs:
     #   dotnet-version: '8.0'
     #   trivy-severity: 'CRITICAL,HIGH'
     #   trivy-exit-code: '1'
-    #   enable-checkov: true           # IaC scan (Terraform/K8s/Dockerfile)
+    #   enable-checkov: true           # IaC scan + policy gate (Terraform/K8s/Dockerfile)
     #   enable-license-scan: false     # REUSE SPDX compliance scan
     #   harden-runner-policy: 'audit'  # 'block' for strict egress
     # secrets:

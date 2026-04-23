@@ -12,7 +12,7 @@
 #   Layer 0 - Repo hygiene (compiled artefacts / conflict markers / secrets / big files)
 #   Layer 1 - Code quality (lint + build + test + coverage, language-dispatched & parallel)
 #   Layer 2 - Security (Trivy vuln + secret, Hadolint, Checkov IaC, license)
-#   Layer 3 - Artifacts (coverage upload, SBOM attestation ready)
+#   Layer 3 - Artifacts (coverage upload)
 #
 # Supply-chain hardening:
 # - Every third-party action is pinned by commit SHA
@@ -77,7 +77,7 @@ on:
         type: string
         default: '1'
       enable-checkov:
-        description: 'Run Checkov IaC scan when Terraform/K8s/Dockerfile present'
+        description: 'Run Checkov IaC scan when Terraform/K8s/Dockerfile present and fail on findings'
         required: false
         type: boolean
         default: true
@@ -228,16 +228,40 @@ jobs:
           if [ -n "$manifest" ]; then
             project_dir="$(dirname "$manifest")"
             [ "$project_dir" = "." ] || project_dir="${project_dir#./}"
+            package_manager='npm'
+            has_lockfile='false'
+            lockfile_path=''
+            cache_name=''
+
+            if [ -f "$project_dir/pnpm-lock.yaml" ]; then
+              package_manager='pnpm'
+              has_lockfile='true'
+              lockfile_path="$project_dir/pnpm-lock.yaml"
+              cache_name='pnpm'
+            elif [ -f "$project_dir/yarn.lock" ]; then
+              package_manager='yarn'
+              has_lockfile='true'
+              lockfile_path="$project_dir/yarn.lock"
+              cache_name='yarn'
+            elif [ -f "$project_dir/package-lock.json" ]; then
+              package_manager='npm'
+              has_lockfile='true'
+              lockfile_path="$project_dir/package-lock.json"
+              cache_name='npm'
+            fi
+
             echo "found=true" >> "$GITHUB_OUTPUT"
             echo "project_dir=$project_dir" >> "$GITHUB_OUTPUT"
             echo "manifest_path=$manifest" >> "$GITHUB_OUTPUT"
-            if [ -f "$project_dir/package-lock.json" ]; then
-              echo "has_lockfile=true" >> "$GITHUB_OUTPUT"
-              echo "lockfile_path=$project_dir/package-lock.json" >> "$GITHUB_OUTPUT"
-            else
-              echo "has_lockfile=false" >> "$GITHUB_OUTPUT"
+            echo "package_manager=$package_manager" >> "$GITHUB_OUTPUT"
+            echo "has_lockfile=$has_lockfile" >> "$GITHUB_OUTPUT"
+            if [ -n "$lockfile_path" ]; then
+              echo "lockfile_path=$lockfile_path" >> "$GITHUB_OUTPUT"
             fi
-            echo "Using Node.js project in $project_dir"
+            if [ -n "$cache_name" ]; then
+              echo "cache_name=$cache_name" >> "$GITHUB_OUTPUT"
+            fi
+            echo "Using Node.js project in $project_dir via $package_manager"
           else
             echo "found=false" >> "$GITHUB_OUTPUT"
             echo "No package.json - skipping"
@@ -248,7 +272,7 @@ jobs:
         uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
           node-version: ${{ matrix.node }}
-          cache: 'npm'
+          cache: ${{ steps.detect.outputs.cache_name }}
           cache-dependency-path: ${{ steps.detect.outputs.lockfile_path }}
 
       - name: Setup Node.js
@@ -257,22 +281,69 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
+      - name: Enable Corepack
+        if: steps.detect.outputs.found == 'true' && steps.detect.outputs.package_manager != 'npm'
+        working-directory: ${{ steps.detect.outputs.project_dir }}
+        run: corepack enable
+
       - name: Install, lint, build, test
         if: steps.detect.outputs.found == 'true'
         working-directory: ${{ steps.detect.outputs.project_dir }}
+        env:
+          NODE_PACKAGE_MANAGER: ${{ steps.detect.outputs.package_manager }}
         run: |
-          if [ -f package-lock.json ]; then
-            npm ci || { echo "::error::npm ci failed"; exit 1; }
-          else
-            echo "::warning::no package-lock.json, falling back to npm install"
-            npm install
-          fi
+          script_exists() {
+            node -e "const s=require('./package.json').scripts||{}; process.exit(s['$1'] ? 0 : 1)"
+          }
+
+          run_script() {
+            script_name="$1"
+            shift || true
+            if ! script_exists "$script_name"; then
+              echo "No '$script_name' script - skipping"
+              return 0
+            fi
+
+            case "$NODE_PACKAGE_MANAGER" in
+              npm)  if [ "$#" -gt 0 ]; then npm run "$script_name" -- "$@"; else npm run "$script_name"; fi ;;
+              pnpm) if [ "$#" -gt 0 ]; then pnpm run "$script_name" -- "$@"; else pnpm run "$script_name"; fi ;;
+              yarn) yarn run "$script_name" "$@" ;;
+              *) echo "::error::Unsupported package manager: $NODE_PACKAGE_MANAGER"; return 1 ;;
+            esac
+          }
+
+          case "$NODE_PACKAGE_MANAGER" in
+            npm)
+              if [ -f package-lock.json ]; then
+                npm ci || { echo "::error::npm ci failed"; exit 1; }
+              else
+                echo "::warning::no package-lock.json, falling back to npm install"
+                npm install || { echo "::error::npm install failed"; exit 1; }
+              fi
+              ;;
+            pnpm)
+              pnpm install --frozen-lockfile || { echo "::error::pnpm install failed"; exit 1; }
+              ;;
+            yarn)
+              yarn install --immutable || yarn install --frozen-lockfile || { echo "::error::yarn install failed"; exit 1; }
+              ;;
+            *)
+              echo "::error::Unsupported package manager: $NODE_PACKAGE_MANAGER"
+              exit 1
+              ;;
+          esac
+
           failed=0
-          npm run lint  --if-present || { echo "::error::Node lint failed";  failed=1; }
-          npm run build --if-present || { echo "::error::Node build failed"; failed=1; }
-          npm test      --if-present -- --ci --reporters=default \
-            || npm test --if-present \
-            || { echo "::error::Node test failed"; failed=1; }
+          run_script lint  || { echo "::error::Node lint failed";  failed=1; }
+          run_script build || { echo "::error::Node build failed"; failed=1; }
+
+          if script_exists test; then
+            case "$NODE_PACKAGE_MANAGER" in
+              npm)  npm test -- --ci --reporters=default || npm test || { echo "::error::Node test failed"; failed=1; } ;;
+              pnpm) pnpm test -- --ci --reporters=default || pnpm test || { echo "::error::Node test failed"; failed=1; } ;;
+              yarn) yarn test --ci --reporters=default || yarn test || { echo "::error::Node test failed"; failed=1; } ;;
+            esac
+          fi
           exit $failed
 
       - name: Upload coverage
@@ -869,7 +940,7 @@ jobs:
         uses: bridgecrewio/checkov-action@33dbb953e9f9e28d92903b9c214f4072e6c7fd07 # v12.2969.0
         with:
           framework: terraform,kubernetes,dockerfile,secrets,github_actions
-          soft_fail: true
+          soft_fail: false
           quiet: true
           output_format: cli,sarif
           output_file_path: 'console,results.sarif'

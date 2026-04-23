@@ -38,6 +38,13 @@ if (-not (Test-Path '.git')) {
 }
 
 if ((Test-Path $Target) -and -not $Force) {
+    $stdinRedirected = $false
+    try { $stdinRedirected = [Console]::IsInputRedirected } catch { $stdinRedirected = $false }
+    if ($stdinRedirected) {
+        Write-Err2 "$Target already exists and stdin is redirected (no prompt available)."
+        Write-Err2 "Re-run with `$env:CI_TEMPLATES_FORCE = '1' to overwrite without prompting."
+        exit 1
+    }
     $ans = Read-Host "[ci-templates] $Target already exists. Overwrite? [y/N]"
     if ($ans -notmatch '^(y|Y|yes|YES)$') {
         Write-Info "Aborted without changes."

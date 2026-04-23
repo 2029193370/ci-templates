@@ -44,11 +44,11 @@ This repository follows enterprise supply-chain best practices:
 - **`step-security/harden-runner`** - every job enforces an egress firewall; the CI runtime can only reach an allow-listed set of hosts.
 - **`actions: read`** default, per-job overrides only when strictly required.
 - **Weekly CodeQL scan** with `security-extended` + `security-and-quality` query suites.
-- **Weekly OpenSSF Scorecard scan** publishes results to the Security tab.
+- **Weekly OpenSSF Scorecard scan** publishes public grading to scorecard.dev and stores the SARIF artifact in workflow runs.
 - **Gitleaks** scans the full git history on every push and PR.
 - **zizmor** static analyser inspects every workflow for injection / permission / pinning issues.
 - **Trivy** filesystem scan (vuln + secret) gated on `CRITICAL,HIGH`.
-- **Signed releases** via SLSA build-provenance attestations (Level 3).
+- **Automated releases** via release-please with reviewable release PRs and sliding major tags.
 
 ## Disclosure Policy
 

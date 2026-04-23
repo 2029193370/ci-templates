@@ -133,7 +133,7 @@ Auto-detects the stack per job and runs lint + build + unit tests + coverage. Ir
 
 | Stack | Detection | Lint / Build | Tests | Coverage output |
 |-------|-----------|--------------|-------|-----------------|
-| Node.js / TypeScript | `package.json` | `npm ci` → `npm run lint` → `npm run build` | `npm test` | `coverage/` → Codecov |
+| Node.js / TypeScript | `package.json` | Auto-detect `npm` / `pnpm` / `yarn` from lockfile, then install → lint → build | test script if present | `coverage/` → Codecov |
 | Java (Maven) | `pom.xml` | `mvn verify` | (same) | JaCoCo `target/site/jacoco/` |
 | Java (Gradle) | `build.gradle*` | `gradle check assemble` | (same) | JaCoCo `build/reports/jacoco/` |
 | PHP / Laravel | `composer.json` or any `*.php` | `composer install` → `php -l` | `composer test` / PHPUnit | custom |
@@ -151,9 +151,9 @@ Auto-detects the stack per job and runs lint + build + unit tests + coverage. Ir
 | [zizmor](https://zizmor.sh/) | GitHub Actions static analysis | SARIF uploaded |
 | [gitleaks](https://github.com/gitleaks/gitleaks) | Full git-history secret scan | PR status check |
 | [Trivy](https://trivy.dev/) | Filesystem vuln + secret scan, post-compromise-safe pinned version | CRITICAL/HIGH fails by default |
-| [Checkov](https://www.checkov.io/) | IaC (Terraform / Kubernetes / Dockerfile / Secrets / Actions) | SARIF uploaded |
+| [Checkov](https://www.checkov.io/) | IaC (Terraform / Kubernetes / Dockerfile / Secrets / Actions) | Optional hard gate + SARIF uploaded |
 | [REUSE](https://reuse.software/) | SPDX license compliance | Optional |
-| [OpenSSF Scorecard](https://scorecard.dev/) | Weekly industry security grading | Badge + SARIF |
+| [OpenSSF Scorecard](https://scorecard.dev/) | Weekly industry security grading | Badge + workflow artifact |
 
 ### Developer experience
 
@@ -230,7 +230,7 @@ jobs:
     # with:
     #   node-versions: '["20","22"]'
     #   python-versions: '["3.11","3.12"]'
-    #   enable-checkov: true
+    #   enable-checkov: true        # IaC policy gate; fails CI on findings
     # secrets:
     #   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 ```
@@ -281,7 +281,7 @@ All inputs are optional.
 | `dotnet-version` | string | `'8.0'` | .NET SDK version. |
 | `trivy-severity` | string | `'CRITICAL,HIGH'` | Comma-separated severities reported by Trivy. |
 | `trivy-exit-code` | string | `'1'` | `'1'` to fail the build on findings, `'0'` to report only. |
-| `enable-checkov` | boolean | `true` | Run Checkov IaC scan when relevant files are detected. |
+| `enable-checkov` | boolean | `true` | Run Checkov IaC scan when relevant files are detected and fail CI on findings. |
 | `enable-license-scan` | boolean | `false` | Run REUSE SPDX compliance scan. |
 | `fail-fast-on-hygiene` | boolean | `false` | Block Layer 1+ if Layer 0 hygiene fails. |
 | `harden-runner-policy` | string | `'audit'` | `'audit'` or `'block'` egress policy. |
@@ -328,7 +328,7 @@ Both matrix jobs run in parallel and produce separate coverage artifacts named `
 │   SHA-pinned actions · Dependabot · Trivy vuln scan      │
 ├──────────────────────────────────────────────────────────┤
 │ Continuous grading                                       │
-│   OpenSSF Scorecard (weekly SARIF)                       │
+│   OpenSSF Scorecard (weekly public grading)              │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -346,7 +346,7 @@ Note that the file in [`starter/`](./starter/.github/workflows/ci.yml) is intent
 
 ### Least privilege
 
-Every workflow declares an explicit top-level `permissions: contents: read`, with job-level overrides only when strictly required (for example `security-events: write` on CodeQL and Scorecard).
+Every workflow declares an explicit top-level `permissions: contents: read`, with job-level overrides only when strictly required (for example `security-events: write` on CodeQL and Checkov SARIF uploads).
 
 ### Reporting vulnerabilities
 
