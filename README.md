@@ -104,6 +104,7 @@ Want matrix testing or non-default inputs? See [Configuration →](#configuratio
 - [Security Model](#security-model)
 - [Versioning & Upgrade Policy](#versioning--upgrade-policy)
 - [How Updates Reach Downstream Repositories](#how-updates-reach-downstream-repositories)
+- [Repository Self-Checks](#repository-self-checks)
 - [Workflow Catalog](#workflow-catalog)
 - [FAQ](#faq)
 - [Migration](#migration)
@@ -402,6 +403,43 @@ If a release misbehaves, the sliding tag is a reversible pointer:
 git tag -f v2 v2.0.0          # locally repoint v2 at a known-good commit
 git push -f origin v2         # every downstream repo is healed on its next CI run
 ```
+
+---
+
+## Repository Self-Checks
+
+When **this template repository itself** receives a push to `main`, GitHub Actions runs a second layer of maintenance workflows around the published reusable pipeline:
+
+```mermaid
+flowchart TB
+    A([Push to main in ci-templates]) --> B[CI - YAML Lint]
+    A --> C[zizmor]
+    A --> D[Gitleaks]
+    A --> E[OpenSSF Scorecard]
+    A --> F[CodeQL]
+    A --> G[Release Please]
+    A --> H[Deploy landing page]
+
+    B --> I[Workflow syntax stays valid]
+    C --> J[Actions security posture stays hardened]
+    D --> K[Secrets are not committed]
+    E --> L[Repository governance is continuously graded]
+    F --> M[Workflow injection and logic risks are scanned]
+    G --> N[SemVer releases and sliding major tags are maintained]
+    H --> O[Docs site stays in sync with README and starter files]
+```
+
+Think of these as the **quality gate for the template itself**:
+
+- `CI - YAML Lint`: validates workflow YAML syntax before a broken file can ship to downstream users.
+- `zizmor (Actions SAST)`: scans GitHub Actions for insecure patterns such as unsafe expressions, overly broad permissions, or problematic action usage.
+- `Gitleaks (secret scan)`: searches the full git history for accidental secrets.
+- `OpenSSF Scorecard`: measures repository-level security posture such as branch protection, update hygiene, and workflow hardening.
+- `CodeQL`: performs static analysis on the `actions` language to catch workflow injection and logic vulnerabilities.
+- `Release Please`: manages release PRs, changelogs, GitHub Releases, and the sliding `v2` tag used by downstream repositories.
+- `Deploy landing page to GitHub Pages`: republishes `docs/` so the public landing page matches the latest README and starter workflow.
+
+This is separate from the **consumer pipeline** in `reusable-ci.yml`: downstream repositories run the reusable CI, while this repository also validates and publishes the template itself.
 
 ---
 
