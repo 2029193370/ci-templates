@@ -7,13 +7,14 @@ name: Self-test (dog-food reusable-ci)
 #
 # What this guarantees:
 #   - reusable-ci.yml actually parses and runs end-to-end.
-#   - The Node detection -> install -> lint -> build -> test chain still
-#     works after a refactor, not just after a downstream user hits prod.
+#   - The Node / Python / Go / Java detection -> install -> lint -> build
+#     -> test chain still works after a refactor, not just after a downstream
+#     user hits prod.
 #   - Fresh pinned SHAs published by Dependabot keep producing green runs.
 #
 # What this does NOT guarantee yet:
-#   - Java / PHP / Python / Go / .NET / Docker code paths. Extend this file
-#     and tests/fixtures/ to cover them as the need arises.
+#   - PHP / .NET / Docker code paths. Extend tests/fixtures/ to cover them
+#     as the need arises.
 
 on:
   push:
@@ -50,6 +51,9 @@ jobs:
       id-token: write
     with:
       node-versions: '["20","22"]'
+      python-versions: '["3.11","3.12"]'
+      java-version: '17'
+      go-version: '1.22'
       harden-runner-policy: 'audit'
       enable-license-scan: false
       enable-checkov: false

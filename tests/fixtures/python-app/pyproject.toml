@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ci-templates-selftest-python-app"
+version = "0.0.0"
+description = "Minimal Python project used by .github/workflows/selftest.yml to dog-food reusable-ci.yml. Zero runtime dependencies on purpose so `pip install -e .` stays offline-safe and the job finishes in seconds."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "ci-templates maintainers" }]
+
+# Deliberately no runtime dependencies. pytest / flake8 / coverage are
+# installed by reusable-ci.yml itself, not by this project.
+
+[tool.setuptools.packages.find]
+include = ["selftest_app*"]
+exclude = ["tests*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

@@ -110,15 +110,11 @@ coverage.xml
 docs/assets/tailwind.css
 
 # ===== Temp helper scripts (ignored locally, not for reuse) =====
-# Catch-all for any scratch file that starts with a leading underscore
-# (_msg.txt, _pins.json, _normalize.py, _upgrade_pins.ps1, ...).
-_*.py
-_*.ps1
-_*.json
-_*.txt
-_*.md
-_normalize.py
-_check.py
-_pins.py
-_pins.json
-_commit_msg.txt
+# Catch-all for scratch files that start with a single leading underscore
+# (_msg.txt, _pins.json, _normalize.py, _upgrade_pins.ps1, ...). The
+# `_[!_]` guard leaves Python dunder files such as __init__.py alone.
+_[!_]*.py
+_[!_]*.ps1
+_[!_]*.json
+_[!_]*.txt
+_[!_]*.md
