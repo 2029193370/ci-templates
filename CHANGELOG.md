@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 This file is automatically maintained by [release-please](https://github.com/googleapis/release-please).
 
+## [2.2.1](https://github.com/2029193370/ci-templates/compare/v2.2.0...v2.2.1) (2026-04-24)
+
+
+### Bug Fixes
+
+* **release:** do not touch immutable release assets in release-attest ([bb8ed4f](https://github.com/2029193370/ci-templates/commit/bb8ed4ff4989e697aafdfdaae43f39fa35ce0241))
+
 ## [2.2.0](https://github.com/2029193370/ci-templates/compare/v2.1.0...v2.2.0) (2026-04-24)
 
 
