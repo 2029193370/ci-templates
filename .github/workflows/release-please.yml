@@ -44,8 +44,14 @@ jobs:
           MAJOR: ${{ steps.release.outputs.major }}
           TAG: ${{ steps.release.outputs.tag_name }}
         run: |
+          set -euo pipefail
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # release-please creates the version tag on GitHub via the API, so the
+          # local clone produced by actions/checkout does not know about it yet.
+          # Fetch tags explicitly to avoid "Failed to resolve 'vX.Y.Z' as a valid
+          # ref" when we try to repoint the sliding major tag.
+          git fetch --tags --force origin
           echo "Moving sliding tag v${MAJOR} -> ${TAG}"
           git tag -f "v${MAJOR}" "${TAG}"
           git push -f origin "v${MAJOR}"
