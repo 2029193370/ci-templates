@@ -419,6 +419,7 @@ flowchart TB
     A --> F[CodeQL]
     A --> G[Release Please]
     A --> H[Deploy landing page]
+    A --> P[Self-test dog-food]
 
     B --> I[Workflow syntax stays valid]
     C --> J[Actions security posture stays hardened]
@@ -427,6 +428,7 @@ flowchart TB
     F --> M[Workflow injection and logic risks are scanned]
     G --> N[SemVer releases and sliding major tags are maintained]
     H --> O[Docs site is republished when docs/ README starter/ change]
+    P --> Q[reusable-ci.yml is proven green end-to-end before release]
 ```
 
 Think of these as the **quality gate for the template itself**:
@@ -438,6 +440,7 @@ Think of these as the **quality gate for the template itself**:
 - `CodeQL`: performs static analysis on the `actions` language to catch workflow injection and logic vulnerabilities.
 - `Release Please`: manages release PRs, changelogs, GitHub Releases, and the sliding `v2` tag used by downstream repositories.
 - `Deploy landing page to GitHub Pages`: republishes `docs/` whenever `docs/`, `README*.md`, or `starter/` change, so the public landing page matches the latest README and starter workflow.
+- `Self-test (dog-food reusable-ci)`: runs the published `reusable-ci.yml` against minimal fixtures under `tests/fixtures/`, so any regression in the detection / install / build / test chain is caught here instead of in downstream repositories. Also runs weekly as a canary against upstream Action drift.
 
 This is separate from the **consumer pipeline** in `reusable-ci.yml`: downstream repositories run the reusable CI, while this repository also validates and publishes the template itself.
 
@@ -448,6 +451,7 @@ This is separate from the **consumer pipeline** in `reusable-ci.yml`: downstream
 | File | Trigger | Purpose |
 |------|---------|---------|
 | `.github/workflows/reusable-ci.yml` | `workflow_call` | Published reusable pipeline — the public API of this repository |
+| `.github/workflows/selftest.yml` | push / PR touching reusable-ci, weekly canary | Dog-foods `reusable-ci.yml` against `tests/fixtures/` so regressions and upstream action drift are caught here, not by downstream users |
 | `.github/workflows/ci-lint.yml` | push / PR affecting workflows | Validates YAML syntax of workflow files |
 | `.github/workflows/codeql.yml` | push / PR / weekly | CodeQL analysis of `actions` language |
 | `.github/workflows/zizmor.yml` | push / PR / weekly | GitHub Actions static security analysis |
@@ -455,6 +459,7 @@ This is separate from the **consumer pipeline** in `reusable-ci.yml`: downstream
 | `.github/workflows/scorecard.yml` | push / weekly | OpenSSF Scorecard grading |
 | `.github/workflows/commitlint.yml` | PR | Enforces Conventional Commits on PR titles |
 | `.github/workflows/release-please.yml` | push to main | Automates releases and sliding major tags |
+| `.github/workflows/pages.yml` | push / PR touching docs/README/starter | Builds Tailwind CSS and deploys the landing page to GitHub Pages |
 | `.github/dependabot.yml` | weekly cron | Grouped dependency update PRs |
 
 ---

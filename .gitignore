@@ -110,6 +110,13 @@ coverage.xml
 docs/assets/tailwind.css
 
 # ===== Temp helper scripts (ignored locally, not for reuse) =====
+# Catch-all for any scratch file that starts with a leading underscore
+# (_msg.txt, _pins.json, _normalize.py, _upgrade_pins.ps1, ...).
+_*.py
+_*.ps1
+_*.json
+_*.txt
+_*.md
 _normalize.py
 _check.py
 _pins.py

@@ -1,0 +1,55 @@
+name: Self-test (dog-food reusable-ci)
+
+# Dog-foods .github/workflows/reusable-ci.yml against the minimal fixtures
+# under tests/fixtures/. Triggers on changes to reusable-ci.yml, this file,
+# or the fixtures themselves, plus a weekly canary run so upstream Action
+# drift is caught within seven days.
+#
+# What this guarantees:
+#   - reusable-ci.yml actually parses and runs end-to-end.
+#   - The Node detection -> install -> lint -> build -> test chain still
+#     works after a refactor, not just after a downstream user hits prod.
+#   - Fresh pinned SHAs published by Dependabot keep producing green runs.
+#
+# What this does NOT guarantee yet:
+#   - Java / PHP / Python / Go / .NET / Docker code paths. Extend this file
+#     and tests/fixtures/ to cover them as the need arises.
+
+on:
+  push:
+    branches: ['main']
+    paths:
+      - '.github/workflows/reusable-ci.yml'
+      - '.github/workflows/selftest.yml'
+      - 'tests/fixtures/**'
+  pull_request:
+    branches: ['main']
+    paths:
+      - '.github/workflows/reusable-ci.yml'
+      - '.github/workflows/selftest.yml'
+      - 'tests/fixtures/**'
+  schedule:
+    # Weekly canary: Mondays 04:00 Asia/Shanghai (20:00 UTC Sunday).
+    - cron: '0 20 * * 0'
+  workflow_dispatch:
+
+concurrency:
+  group: selftest-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  reusable-ci:
+    name: Run reusable-ci against tests/fixtures/
+    uses: ./.github/workflows/reusable-ci.yml
+    permissions:
+      contents: read
+      security-events: write
+      id-token: write
+    with:
+      node-versions: '["20","22"]'
+      harden-runner-policy: 'audit'
+      enable-license-scan: false
+      enable-checkov: false
