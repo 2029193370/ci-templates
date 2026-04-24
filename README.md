@@ -443,7 +443,7 @@ Think of these as the **quality gate for the template itself**:
 - `Release Please`: manages release PRs, changelogs, GitHub Releases, and the sliding `v2` tag used by downstream repositories.
 - `Deploy landing page to GitHub Pages`: republishes `docs/` whenever `docs/`, `README*.md`, or `starter/` change, so the public landing page matches the latest README and starter workflow.
 - `Self-test (dog-food reusable-ci)`: runs the published `reusable-ci.yml` against minimal fixtures under `tests/fixtures/` covering Node, Python, Go and Java, so any regression in the detection / install / build / test chain is caught here instead of in downstream repositories. Also runs weekly as a canary against upstream Action drift.
-- `Release Attestation`: on every published release, signs the source tarball and an SPDX SBOM with sigstore (Fulcio + Rekor) via GitHub's OIDC-backed identity, and uploads both as release assets. Consumers can verify with `gh attestation verify --repo 2029193370/ci-templates <tarball>` — no long-lived signing keys live in the repo.
+- `Release Attestation`: on every published release, signs the GitHub-generated source tarball and an SPDX SBOM with sigstore (Fulcio + Rekor) via this workflow run's short-lived OIDC identity. The attestation is stored permanently in GitHub's attestation API and is queryable with `gh attestation verify --repo 2029193370/ci-templates <tarball>`. The SBOM and a sha256 file are retained as workflow artefacts for 90 days. No long-lived signing keys live in the repo.
 
 This is separate from the **consumer pipeline** in `reusable-ci.yml`: downstream repositories run the reusable CI, while this repository also validates and publishes the template itself.
 
@@ -462,7 +462,7 @@ This is separate from the **consumer pipeline** in `reusable-ci.yml`: downstream
 | `.github/workflows/scorecard.yml` | push / weekly | OpenSSF Scorecard grading |
 | `.github/workflows/commitlint.yml` | PR | Enforces Conventional Commits on PR titles |
 | `.github/workflows/release-please.yml` | push to main | Automates releases and sliding major tags |
-| `.github/workflows/release-attest.yml` | release published | Signs the source tarball and SPDX SBOM with sigstore and uploads them to the release |
+| `.github/workflows/release-attest.yml` | release published | Signs the GitHub source tarball and an SPDX SBOM with sigstore; publishes provenance to GitHub's attestation API |
 | `.github/workflows/pages.yml` | push / PR touching docs/README/starter | Builds Tailwind CSS and deploys the landing page to GitHub Pages |
 | `.github/rulesets/main.json` | manual (`scripts/apply-rulesets.*`) | Version-controlled source of truth for the `main` branch ruleset |
 | `.github/dependabot.yml` | weekly cron | Grouped dependency update PRs |
@@ -514,15 +514,19 @@ REUSE requires SPDX headers on every source file, which most projects cannot ret
 
 ### How do I verify a release came from this repository?
 
-Every published release ships a source tarball (`ci-templates-vX.Y.Z.tar.gz`), a sha256 file, and a `sbom.spdx.json` SBOM, all covered by a sigstore build-provenance attestation:
+Every published release is covered by a sigstore build-provenance attestation over GitHub's own source tarball for that tag, plus an SPDX 2.3 SBOM. Download the tarball from GitHub and verify it:
 
 ```bash
+TAG=v2.2.0
+curl -L -o "ci-templates-${TAG}.tar.gz" \
+  "https://github.com/2029193370/ci-templates/archive/refs/tags/${TAG}.tar.gz"
+
 gh attestation verify \
   --repo 2029193370/ci-templates \
-  ci-templates-v2.1.0.tar.gz
+  "ci-templates-${TAG}.tar.gz"
 ```
 
-A successful verification proves the artefact was produced by the `release-attest.yml` workflow run on this repository, with a short-lived OIDC identity signed against the public Fulcio CA and logged in Rekor. No long-lived signing key lives in the repo.
+A successful verification proves the artefact was produced by the `release-attest.yml` workflow run on this repository, with a short-lived OIDC identity signed against the public Fulcio CA and logged in Rekor. No long-lived signing key lives in the repo. The SBOM and sha256 files are available as workflow artefacts on the corresponding run page for 90 days after release.
 
 ---
 
