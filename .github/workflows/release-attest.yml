@@ -1,0 +1,137 @@
+name: Release Attestation
+
+# Produces build provenance + an SBOM for every published GitHub Release and
+# uploads both, plus the sha256 of the source tarball, as release assets.
+#
+# What downstream consumers get per release:
+#   - <repo>-<tag>.tar.gz          reproducible source archive
+#   - <repo>-<tag>.tar.gz.sha256   its sha256 digest
+#   - sbom.spdx.json               SPDX 2.3 SBOM of the source tree
+#   - sigstore attestation         published to GitHub's attestation store,
+#                                  queryable via `gh attestation verify`
+#
+# The attestation is signed via the workflow's short-lived OIDC identity
+# against Fulcio + Rekor (the public good sigstore). No long-lived keys
+# live in the repo.
+#
+# Verifying a release locally:
+#   gh attestation verify \
+#     --repo 2029193370/ci-templates \
+#     ci-templates-v2.1.0.tar.gz
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Git tag to attest (e.g. v2.1.0). Ignored when triggered by a release event.'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-attest-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  attest:
+    name: Sign release artefacts with sigstore
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      # Upload attestation artefacts to the release.
+      contents: write
+      # Mint an OIDC token so sigstore/Fulcio can bind the signature to
+      # this exact workflow run.
+      id-token: write
+      # Publish the provenance attestation to GitHub's attestation store.
+      attestations: write
+    steps:
+      - name: Harden the runner
+        uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
+        with:
+          egress-policy: audit
+
+      - name: Resolve target tag
+        id: target
+        env:
+          EVENT_TAG: ${{ github.event.release.tag_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          tag="${EVENT_TAG:-${INPUT_TAG:-}}"
+          if [ -z "$tag" ]; then
+            echo "::error::No tag determined from release event or workflow_dispatch input"
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Target tag: $tag"
+
+      - name: Checkout at tag
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ steps.target.outputs.tag }}
+          persist-credentials: false
+
+      - name: Build reproducible source tarball
+        id: tarball
+        env:
+          TAG: ${{ steps.target.outputs.tag }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          repo_short="${REPO##*/}"
+          archive="${repo_short}-${TAG}.tar.gz"
+          prefix="${repo_short}-${TAG}/"
+
+          # `git archive` is deterministic for a given commit and prefix;
+          # re-running it yields byte-identical output, which is what lets
+          # downstream verifiers reproduce the sha256 in the attestation.
+          git archive --format=tar.gz --prefix="$prefix" -o "$archive" "$TAG"
+
+          sha256sum "$archive" > "${archive}.sha256"
+          echo "archive=$archive" >> "$GITHUB_OUTPUT"
+          echo "sha256_file=${archive}.sha256" >> "$GITHUB_OUTPUT"
+          echo "Source tarball:"
+          ls -l "$archive" "${archive}.sha256"
+          echo ""
+          echo "sha256:"
+          cat "${archive}.sha256"
+
+      - name: Generate SBOM (SPDX 2.3)
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          path: .
+          format: spdx-json
+          output-file: sbom.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+
+      - name: Attest provenance of source tarball and SBOM
+        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
+        with:
+          subject-path: |
+            ${{ steps.tarball.outputs.archive }}
+            sbom.spdx.json
+
+      - name: Upload artefacts to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ steps.target.outputs.tag }}
+          ARCHIVE: ${{ steps.tarball.outputs.archive }}
+          SHA256_FILE: ${{ steps.tarball.outputs.sha256_file }}
+        run: |
+          set -euo pipefail
+          gh release upload "$TAG" \
+            "$ARCHIVE" \
+            "$SHA256_FILE" \
+            sbom.spdx.json \
+            --clobber --repo "$REPO"
+          echo ""
+          echo "::notice::Release $TAG now ships a sigstore-attested tarball + SPDX SBOM."
+          echo "Verify locally with:"
+          echo "  gh attestation verify --repo $REPO $ARCHIVE"
