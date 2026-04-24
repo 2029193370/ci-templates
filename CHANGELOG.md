@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 This file is automatically maintained by [release-please](https://github.com/googleapis/release-please).
 
+## [2.2.0](https://github.com/2029193370/ci-templates/compare/v2.1.0...v2.2.0) (2026-04-24)
+
+
+### Features
+
+* **ci:** extend selftest dog-food to python, go and java ([9bb4959](https://github.com/2029193370/ci-templates/commit/9bb4959024873a62b7f82947c6124674bb855d64))
+* **release:** sign release artefacts with sigstore and ship SPDX SBOM ([dc076f1](https://github.com/2029193370/ci-templates/commit/dc076f1eafac90cc62a05eb7780cf80970cf4455))
+
 ## [2.1.0](https://github.com/2029193370/ci-templates/compare/v2.0.0...v2.1.0) (2026-04-24)
 
 
