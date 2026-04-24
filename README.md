@@ -77,7 +77,7 @@ jobs:
     uses: 2029193370/ci-templates/.github/workflows/reusable-ci.yml@v2
 ```
 
-That's it — **8 lines** for a full enterprise-grade pipeline. For the richer starter file with every input documented, see [`starter/.github/workflows/ci.yml`](./starter/.github/workflows/ci.yml).
+That's it — **~6 lines** for a full enterprise-grade pipeline. For the richer starter file with every input documented, see [`starter/.github/workflows/ci.yml`](./starter/.github/workflows/ci.yml).
 
 ### What happens next?
 
@@ -426,7 +426,7 @@ flowchart TB
     E --> L[Repository governance is continuously graded]
     F --> M[Workflow injection and logic risks are scanned]
     G --> N[SemVer releases and sliding major tags are maintained]
-    H --> O[Docs site stays in sync with README and starter files]
+    H --> O[Docs site is republished when docs/ README starter/ change]
 ```
 
 Think of these as the **quality gate for the template itself**:
@@ -437,7 +437,7 @@ Think of these as the **quality gate for the template itself**:
 - `OpenSSF Scorecard`: measures repository-level security posture such as branch protection, update hygiene, and workflow hardening.
 - `CodeQL`: performs static analysis on the `actions` language to catch workflow injection and logic vulnerabilities.
 - `Release Please`: manages release PRs, changelogs, GitHub Releases, and the sliding `v2` tag used by downstream repositories.
-- `Deploy landing page to GitHub Pages`: republishes `docs/` so the public landing page matches the latest README and starter workflow.
+- `Deploy landing page to GitHub Pages`: republishes `docs/` whenever `docs/`, `README*.md`, or `starter/` change, so the public landing page matches the latest README and starter workflow.
 
 This is separate from the **consumer pipeline** in `reusable-ci.yml`: downstream repositories run the reusable CI, while this repository also validates and publishes the template itself.
 

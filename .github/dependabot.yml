@@ -27,67 +27,12 @@ updates:
         update-types: ['major', 'minor', 'patch']
 
   # ----------------------------------------------------------
-  # Application-language ecosystems. The template repo itself has
-  # no package.json / requirements.txt etc., so these entries are
-  # inherited by forks/consumers who add real manifests. Limits are
-  # kept low to avoid PR spam.
+  # NOTE: this template repository has no application manifests
+  # (no package.json / requirements.txt / pom.xml / ...), so the
+  # other Dependabot ecosystems are intentionally NOT configured
+  # here - they would only generate "manifest not found" noise on
+  # the Insights page.
+  #
+  # The user-facing template lives in `starter/.github/dependabot.yml`
+  # and is the file downstream consumers copy into their own repos.
   # ----------------------------------------------------------
-  - package-ecosystem: 'npm'
-    directory: '/'
-    schedule: { interval: 'weekly', day: 'monday' }
-    open-pull-requests-limit: 3
-    labels: ['dependencies', 'npm']
-    commit-message: { prefix: 'chore(deps)' }
-    groups:
-      npm-all:
-        patterns: ['*']
-        update-types: ['minor', 'patch']
-
-  - package-ecosystem: 'composer'
-    directory: '/'
-    schedule: { interval: 'weekly', day: 'monday' }
-    open-pull-requests-limit: 3
-    labels: ['dependencies', 'php']
-    commit-message: { prefix: 'chore(deps)' }
-
-  - package-ecosystem: 'pip'
-    directory: '/'
-    schedule: { interval: 'weekly', day: 'monday' }
-    open-pull-requests-limit: 3
-    labels: ['dependencies', 'python']
-    commit-message: { prefix: 'chore(deps)' }
-
-  - package-ecosystem: 'maven'
-    directory: '/'
-    schedule: { interval: 'weekly', day: 'monday' }
-    open-pull-requests-limit: 3
-    labels: ['dependencies', 'java']
-    commit-message: { prefix: 'chore(deps)' }
-
-  - package-ecosystem: 'gradle'
-    directory: '/'
-    schedule: { interval: 'weekly', day: 'monday' }
-    open-pull-requests-limit: 3
-    labels: ['dependencies', 'java']
-    commit-message: { prefix: 'chore(deps)' }
-
-  - package-ecosystem: 'gomod'
-    directory: '/'
-    schedule: { interval: 'weekly', day: 'monday' }
-    open-pull-requests-limit: 3
-    labels: ['dependencies', 'go']
-    commit-message: { prefix: 'chore(deps)' }
-
-  - package-ecosystem: 'nuget'
-    directory: '/'
-    schedule: { interval: 'weekly', day: 'monday' }
-    open-pull-requests-limit: 3
-    labels: ['dependencies', 'dotnet']
-    commit-message: { prefix: 'chore(deps)' }
-
-  - package-ecosystem: 'docker'
-    directory: '/'
-    schedule: { interval: 'weekly', day: 'monday' }
-    open-pull-requests-limit: 3
-    labels: ['dependencies', 'docker']
-    commit-message: { prefix: 'chore(deps)' }

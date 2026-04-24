@@ -103,6 +103,12 @@ test-results/
 coverage.xml
 *.lcov
 
+# ===== Generated artifacts (rebuilt in CI) =====
+# Tailwind CSS is compiled by .github/workflows/pages.yml from
+# docs/input.css + docs/tailwind.config.js. Keeping the compiled file
+# out of VCS avoids binary churn in PR diffs.
+docs/assets/tailwind.css
+
 # ===== Temp helper scripts (ignored locally, not for reuse) =====
 _normalize.py
 _check.py
