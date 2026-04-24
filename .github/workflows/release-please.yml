@@ -16,6 +16,11 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      # Required so we can `gh workflow run release-attest.yml` at the
+      # end: the default GITHUB_TOKEN cannot trigger other workflows
+      # from a release event, so we dispatch the attestation run
+      # ourselves once a version has actually shipped.
+      actions: write
     steps:
       - name: Harden the runner
         uses: step-security/harden-runner@8d3c67de8e2fe68ef647c8db1e6a09f647780f40 # v2.19.0
@@ -55,3 +60,23 @@ jobs:
           echo "Moving sliding tag v${MAJOR} -> ${TAG}"
           git tag -f "v${MAJOR}" "${TAG}"
           git push -f origin "v${MAJOR}"
+
+      - name: Dispatch release attestation
+        if: ${{ steps.release.outputs.release_created }}
+        env:
+          # The attestation workflow needs id-token:write, so it cannot
+          # simply chain off the `release: published` event: GitHub's
+          # default anti-loop policy suppresses workflow triggers caused
+          # by another workflow's GITHUB_TOKEN. A manual dispatch via
+          # `gh workflow run` does fire, provided the caller has
+          # `actions: write` on the repo.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ steps.release.outputs.tag_name }}
+        run: |
+          set -euo pipefail
+          echo "Dispatching release-attest.yml for tag $TAG"
+          gh workflow run release-attest.yml \
+            --repo "$REPO" \
+            --ref main \
+            -f "tag=$TAG"
