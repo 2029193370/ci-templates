@@ -79,6 +79,16 @@ jobs:
 
 That's it — **~6 lines** for a full enterprise-grade pipeline. For the richer starter file with every input documented, see [`starter/.github/workflows/ci.yml`](./starter/.github/workflows/ci.yml).
 
+### Which `@version` should I pin?
+
+| Pin | Auto-updates | Reproducibility | Use when |
+|-----|--------------|-----------------|----------|
+| `@v2` (sliding major) | Yes, on every CI run | Medium | **Default.** You want security fixes and new language support without opening PRs. |
+| `@v2.2.1` (exact tag) | No | High | You're in a regulated / audited environment where silent dependency updates are not allowed. |
+| `@<40-char SHA>` | No | Highest | Strictest supply-chain posture; only moves when you edit the file. |
+
+`@v2` is the documented recommendation and what the installer writes. See [Versioning & Upgrade Policy](#versioning--upgrade-policy) for the full lifecycle (emergency rollback, previous-major support window).
+
 ### What happens next?
 
 1. On your **first push / pull request**, the 3-layer pipeline runs (hygiene → multi-language lint+build+test → 4-layer security).

@@ -16,8 +16,23 @@ permissions:
 
 jobs:
   ci:
-    # Pin at the sliding major tag so you receive compatible updates automatically.
-    # Pin at an exact tag (e.g. @v2.0.0) if you need fully reproducible builds.
+    # -----------------------------------------------------------------
+    # Version pinning — pick the row that matches your risk profile:
+    #
+    #   @v2          sliding major tag    auto-picks up every v2.x.y
+    #                                     on next CI run (recommended)
+    #   @v2.2.1      exact release tag    reproducible; you own the
+    #                                     upgrade cadence (regulated
+    #                                     / audited environments)
+    #   @<40-char sha>  commit SHA        strictest supply-chain
+    #                                     posture; never moves unless
+    #                                     you edit this file
+    #
+    # Default is @v2: you get security fixes and new language support
+    # without opening a single PR. Switch to an exact tag or SHA when
+    # compliance rules ("no silent dependency updates") demand it.
+    # Full trade-off table: https://github.com/2029193370/ci-templates#versioning--upgrade-policy
+    # -----------------------------------------------------------------
     uses: 2029193370/ci-templates/.github/workflows/reusable-ci.yml@v2
     # Uncomment what you need. Every input is optional and auto-defaults.
     # with:
