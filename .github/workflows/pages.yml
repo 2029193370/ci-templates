@@ -20,6 +20,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.repository == '2029193370/ci-templates'
     name: Build site
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -63,6 +64,7 @@ jobs:
           path: docs
 
   deploy:
+    if: github.repository == '2029193370/ci-templates'
     name: Deploy
     needs: build
     runs-on: ubuntu-latest
