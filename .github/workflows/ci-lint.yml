@@ -62,4 +62,8 @@ jobs:
 
       - name: Run yamllint
         run: |
-          yamllint -c .yamllint .github/workflows starter/.github/workflows .github/dependabot.yml
+          targets=".github/workflows starter/.github/workflows"
+          if [ -f .github/dependabot.yml ]; then
+            targets="$targets .github/dependabot.yml"
+          fi
+          yamllint -c .yamllint $targets
