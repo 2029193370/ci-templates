@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 This file is automatically maintained by [release-please](https://github.com/googleapis/release-please).
 
+## [2.2.2](https://github.com/2029193370/ci-templates/compare/v2.2.1...v2.2.2) (2026-05-13)
+
+
+### Bug Fixes
+
+* avoid dependabot manifest failures ([93e2e94](https://github.com/2029193370/ci-templates/commit/93e2e9489100925931c8ee9ce02490c1a2d2a88b))
+* disable root dependabot for template safety ([962b9f2](https://github.com/2029193370/ci-templates/commit/962b9f2f8be894935008695ca54ccbd09868ec46))
+* make github template initialization safe ([7ddb654](https://github.com/2029193370/ci-templates/commit/7ddb65415b70ea0272ce4f31d6e419ff908fe872))
+* **pages:** skip deploys in template copies ([23eab2f](https://github.com/2029193370/ci-templates/commit/23eab2f34149967f6d122a0d5054cc998629509a))
+
 ## [2.2.1](https://github.com/2029193370/ci-templates/compare/v2.2.0...v2.2.1) (2026-04-24)
 
 
