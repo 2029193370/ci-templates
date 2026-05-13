@@ -188,7 +188,7 @@
       </div>
       <h3 class="font-bold text-lg">Runtime egress firewall</h3>
       <p class="mt-2 text-sm text-slate-400 leading-relaxed">
-        Every job boots with <code class="kbd">step-security/harden-runner</code>. Audit mode lists every outbound host; switch to block when ready.
+        Public repos boot jobs with <code class="kbd">step-security/harden-runner</code>. Private repos can opt in after StepSecurity is configured.
       </p>
     </div>
 
@@ -270,7 +270,7 @@
  │    aggregate coverage-&lt;stack&gt;-&lt;v&gt;.* → Codecov (optional)      │
  └──────────────────────────────────────────────────────────────┘
 
- <span class="text-emerald-300">Every job begins with step-security/harden-runner.</span>
+ <span class="text-emerald-300">Public repos begin jobs with step-security/harden-runner; private repos opt in.</span>
  <span class="text-emerald-300">Every `uses:` is pinned to a commit SHA.</span>
 </pre>
   </div>
@@ -402,7 +402,7 @@
     </div>
     <div class="card rounded-2xl p-6">
       <h3 class="font-bold">Runtime hardening</h3>
-      <p class="mt-2 text-sm text-slate-400">step-security/harden-runner egress firewall</p>
+      <p class="mt-2 text-sm text-slate-400">harden-runner egress firewall for public repos; opt-in for private repos</p>
     </div>
     <div class="card rounded-2xl p-6">
       <h3 class="font-bold">Dependency hygiene</h3>

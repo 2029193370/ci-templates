@@ -1,0 +1,24 @@
+name: CI & Security Scan
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+    branches: ['main']
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  ci:
+    if: github.repository != '2029193370/ci-templates'
+    uses: ./.github/workflows/reusable-ci.yml
+    with:
+      enable-checkov: false
+      enable-license-scan: false

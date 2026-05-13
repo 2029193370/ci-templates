@@ -48,6 +48,8 @@ jobs:
     #   trivy-exit-code: '1'
     #   enable-checkov: true           # IaC scan + policy gate (Terraform/K8s/Dockerfile)
     #   enable-license-scan: false     # REUSE SPDX compliance scan
+    #   enable-code-scanning-upload: true # Private repos: enable only when GitHub Code Scanning is available
+    #   enable-harden-runner: true     # Private repos: enable only after StepSecurity runtime security is configured
     #   harden-runner-policy: 'audit'  # 'block' for strict egress
     # secrets:
     #   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

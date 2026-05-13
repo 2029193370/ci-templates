@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   release-please:
+    if: github.repository == '2029193370/ci-templates'
     name: release-please
     runs-on: ubuntu-latest
     timeout-minutes: 10

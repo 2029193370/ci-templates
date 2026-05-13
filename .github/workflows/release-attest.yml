@@ -43,6 +43,7 @@ concurrency:
 
 jobs:
   attest:
+    if: github.repository == '2029193370/ci-templates'
     name: Sign release artefacts with sigstore
     runs-on: ubuntu-latest
     timeout-minutes: 15

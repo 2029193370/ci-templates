@@ -1,0 +1,2 @@
+This marker lets the template cleanup workflow detect repositories generated
+from ci-templates. It is removed automatically in generated repositories.

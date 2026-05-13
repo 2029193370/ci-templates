@@ -16,6 +16,7 @@ permissions:
 
 jobs:
   zizmor:
+    if: github.repository == '2029193370/ci-templates'
     name: zizmor workflow audit
     runs-on: ubuntu-latest
     timeout-minutes: 10
